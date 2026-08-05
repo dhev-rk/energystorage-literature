@@ -3,315 +3,104 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Battery Literature Library</title>
+<meta name="description" content="Curated battery safety & energy storage literature. Browse by category, click through to the source.">
+<title>Battery & Energy Storage Literature</title>
 <style>
-  /* ---- design tokens -------------------------------------------------------
-     Direction: a lab instrument, not a landing page. Data-dense, monospace for
-     measured values (reliability, citations, DOIs — things that read like
-     readouts), a clean humanist sans for reading. The one signature element is
-     the chemistry spectrum: every paper carries a chemistry, each chemistry a
-     fixed hue, shown as a left spine on cards and as the filter's active color.
-  ------------------------------------------------------------------------- */
   :root{
     --bg:#ffffff; --panel:#f6f7f9; --panel-2:#eceef1; --line:#dde1e6;
     --ink:#1a1f26; --ink-dim:#5b6570; --ink-faint:#8a94a0;
-    --accent:#0f8f8a;             /* teal — instrument readout, darkened for contrast on white */
-    --accent-ink:#ffffff;
-    --hi:#1a8f52; --med:#a5720a; --lo:#c23f2f; --unv:#6b7280;
+    --accent:#0f8f8a; --accent-ink:#ffffff;
     --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --r:6px;
   }
-  /* chemistry spectrum — the signature */
-  .chem-lithium-ion{--c:#4c8bf5}
-  .chem-sodium-ion{--c:#f5a04c}
-  .chem-lithium-metal{--c:#8b7cf5}
-  .chem-solid-state{--c:#4cc4c0}
-  .chem-lithium-sulfur{--c:#f5cf4c}
-  .chem-lead-acid{--c:#9aa7b4}
-  .chem-flow{--c:#4cd6b0}
-  .chem-potassium-ion{--c:#e06ca0}
-  .chem-other{--c:#68737f}
+  .chem-lithium-ion{--c:#4c8bf5} .chem-sodium-ion{--c:#f5a04c} .chem-lithium-metal{--c:#8b7cf5}
+  .chem-solid-state{--c:#4cc4c0} .chem-lithium-sulfur{--c:#c99f00} .chem-lead-acid{--c:#9aa7b4}
+  .chem-flow{--c:#4cd6b0} .chem-potassium-ion{--c:#c0507e} .chem-other{--c:#68737f}
 
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
-  body{
-    background:var(--bg);color:var(--ink);font-family:var(--sans);
-    font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;
-  }
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
 
-  .app{display:grid;grid-template-columns:270px 1fr;height:100vh}
-  @media (max-width:820px){.app{grid-template-columns:1fr}.sidebar{display:none}}
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  @media (max-width:820px){.app{grid-template-columns:1fr}.sidebar{position:static;border-right:none;border-bottom:1px solid var(--line)}}
 
-  /* ---- sidebar ---- */
-  .sidebar{
-    background:var(--panel);border-right:1px solid var(--line);
-    overflow-y:auto;padding:18px 16px 40px;
-  }
-  .brand{display:flex;align-items:baseline;gap:8px;margin:2px 2px 4px}
-  .brand h1{font-size:15px;font-weight:650;letter-spacing:-.01em;margin:0}
-  .brand .n{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
-  .stamp{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
-    margin:0 2px 18px;letter-spacing:.02em}
-
+  .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px 40px;
+    position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}
+  .brand h1{font-size:16px;font-weight:650;margin:2px 2px 2px}
+  .brand p{margin:0 2px 16px;color:var(--ink-faint);font-size:12px;line-height:1.5}
+  .stamp{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin:0 2px 18px}
   .facet{margin-bottom:20px}
-  .facet h3{
-    font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.09em;
-    text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px 2px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .facet h3 button{
-    font:inherit;background:none;border:none;color:var(--accent);cursor:pointer;
-    text-transform:none;letter-spacing:0;padding:0;font-size:10.5px;visibility:hidden;
-  }
+  .facet h3{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px 2px;display:flex;justify-content:space-between}
+  .facet h3 button{font:inherit;background:none;border:none;color:var(--accent);cursor:pointer;
+    text-transform:none;letter-spacing:0;padding:0;font-size:10.5px;visibility:hidden}
   .facet.has-active h3 button{visibility:visible}
-  .opt{
-    display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--r);
-    cursor:pointer;color:var(--ink-dim);user-select:none;
-  }
+  .opt{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--r);cursor:pointer;color:var(--ink-dim)}
   .opt:hover{background:var(--panel-2);color:var(--ink)}
   .opt.on{background:var(--panel-2);color:var(--ink)}
   .opt .dot{width:8px;height:8px;border-radius:2px;background:var(--c,var(--ink-faint));flex:none}
   .opt .lab{flex:1;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .opt .ct{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
-  .opt.on .ct{color:var(--accent)}
 
-  /* ---- main ---- */
-  .main{overflow-y:auto;position:relative}
-  .topbar{
-    position:sticky;top:0;z-index:5;background:rgba(255,255,255,.86);
-    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
-    padding:14px 22px;display:flex;gap:14px;align-items:center;
-  }
-  .search{position:relative;flex:1;max-width:560px}
-  .search input{
-    width:100%;background:var(--panel);border:1px solid var(--line);
-    color:var(--ink);border-radius:var(--r);padding:9px 12px 9px 34px;
-    font-family:var(--sans);font-size:14px;outline:none;
-  }
-  .search input:focus{border-color:var(--accent)}
-  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);
-    width:15px;height:15px;stroke:var(--ink-faint);fill:none}
-  .count{font-family:var(--mono);font-size:12px;color:var(--ink-dim);white-space:nowrap}
-  .count b{color:var(--ink)}
-  .sortsel{
-    background:var(--panel);border:1px solid var(--line);color:var(--ink-dim);
-    border-radius:var(--r);padding:8px 10px;font-family:var(--mono);font-size:12px;outline:none;
-  }
-
-  .active-chips{display:flex;flex-wrap:wrap;gap:6px;padding:10px 22px 0}
-  .chip{
-    display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;
-    background:var(--panel-2);border:1px solid var(--line);border-radius:20px;
-    padding:3px 9px;color:var(--ink-dim);cursor:pointer;
-  }
-  .chip:hover{color:var(--ink);border-color:var(--ink-faint)}
-  .chip .x{color:var(--ink-faint)}
-
-  .list{padding:14px 22px 60px;display:flex;flex-direction:column;gap:8px}
-  .card{
-    display:grid;grid-template-columns:4px 1fr auto;gap:0;
-    background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
-    cursor:pointer;overflow:hidden;transition:border-color .12s,transform .12s;
-  }
-  .card:hover{border-color:var(--ink-faint);transform:translateY(-1px)}
-  .spine{background:var(--c,var(--ink-faint))}
-  .card .body{padding:12px 14px;min-width:0}
-  .card .t{font-size:14.5px;font-weight:600;letter-spacing:-.01em;margin:0 0 5px;
-    color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .card .meta{font-family:var(--mono);font-size:11.5px;color:var(--ink-dim);
-    display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
-  .card .meta .chem{color:var(--c,var(--ink-dim));text-transform:capitalize}
-  .card .tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:4px}
-  .tag{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);
-    background:var(--panel-2);border-radius:3px;padding:1px 6px}
-  .card .rail{padding:12px 14px;display:flex;flex-direction:column;align-items:flex-end;
-    justify-content:space-between;gap:6px;border-left:1px solid var(--line);min-width:96px}
-  .rel{font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;
-    display:inline-flex;align-items:center;gap:5px}
-  .rel .n{font-size:12px}
-  .rel.High{color:var(--hi);background:rgba(91,214,138,.12)}
-  .rel.Medium{color:var(--med);background:rgba(227,179,65,.12)}
-  .rel.Low{color:var(--lo);background:rgba(224,108,94,.12)}
-  .rel.Unverified{color:var(--unv);background:rgba(125,133,144,.12)}
-  .cites{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
-  .cites b{color:var(--ink-dim)}
-
+  .main{overflow-y:auto}
+  .topbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .search{position:relative;flex:1;min-width:200px;max-width:480px}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+    fill:none;stroke:var(--ink-faint)}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    padding:9px 12px 9px 34px;font:inherit;color:var(--ink)}
+  .count{font-family:var(--mono);font-size:12px;color:var(--ink-faint);white-space:nowrap}
+  .list{padding:16px 22px 60px;display:flex;flex-direction:column;gap:10px}
+  .card{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    background:var(--panel);text-decoration:none;color:inherit}
+  .card:hover{border-color:var(--c,var(--ink-faint));text-decoration:none}
+  .card .spine{width:4px;background:var(--c,var(--ink-faint));flex:none}
+  .card .body{padding:14px 16px;flex:1;min-width:0}
+  .card .t{font-size:14.5px;font-weight:600;margin:0 0 6px;color:var(--ink);line-height:1.4}
+  .card .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-dim);margin-bottom:6px}
+  .card .chem{color:var(--c);font-weight:600}
+  .card .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .card .tag{font-family:var(--mono);font-size:10.5px;background:var(--panel-2);color:var(--ink-dim);
+    padding:2px 7px;border-radius:4px}
+  .card .go{align-self:center;padding:0 16px;color:var(--ink-faint);font-family:var(--mono);font-size:12px;flex:none}
   .empty{padding:80px 22px;text-align:center;color:var(--ink-faint)}
-  .empty p{margin:6px 0}
   .empty .big{font-size:16px;color:var(--ink-dim)}
-
-  /* ---- compare selection ---- */
-  .card{position:relative}
-  .card.selected{outline:2px solid var(--accent);outline-offset:-2px}
-  .cmp-wrap{display:flex;align-items:center;padding-left:4px}
-  .cmp-wrap input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
-  .cmpbar{
-    position:sticky;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
-    padding:10px 22px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
-    box-shadow:0 -2px 10px rgba(0,0,0,.05);
-  }
-  .cmpbar.show{display:flex}
-  .cmpbar .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
-  .cmpbar .cmpchips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
-  .cmpbar .cmpchip{
-    font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
-    padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px;
-  }
-  .cmpbar .cmpchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cmpbar .cmpchip .x{cursor:pointer;color:var(--ink-faint);font-weight:700}
-  .cmpbar .cmpchip .x:hover{color:var(--lo)}
-
-  /* ---- compare overlay ---- */
-  .compare-overlay{
-    position:fixed;inset:0;z-index:25;background:var(--bg);display:none;
-    flex-direction:column;
-  }
-  .compare-overlay.open{display:flex}
-  .compare-head{padding:16px 22px;border-bottom:1px solid var(--line);
-    display:flex;align-items:center;justify-content:space-between;flex:none}
-  .compare-head h2{font-size:16px;margin:0;font-weight:650}
-  .compare-body{flex:1;overflow:auto;padding:20px 22px 40px}
-  .compare-grid{display:grid;gap:18px;align-items:start;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-  .compare-col{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
-  .compare-col .spine-top{height:4px;background:var(--c,var(--ink-faint))}
-  .compare-col .chead{padding:14px 16px 12px;border-bottom:1px solid var(--line);position:relative}
-  .compare-col .chead .rm{position:absolute;top:10px;right:10px;background:none;border:none;
-    color:var(--ink-faint);cursor:pointer;font-size:16px;padding:2px}
-  .compare-col .chead .rm:hover{color:var(--lo)}
-  .compare-col .chead h3{font-size:14px;margin:0 22px 6px 0;line-height:1.35}
-  .compare-col .chead .meta2{font-size:11.5px;color:var(--ink-dim)}
-  .compare-col .cbody{padding:12px 16px 16px}
-
-  /* ---- detail drawer ---- */
-  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;
-    transition:opacity .18s;z-index:20}
-  .scrim.open{opacity:1;pointer-events:auto}
-  .drawer{
-    position:fixed;top:0;right:0;height:100vh;width:min(620px,94vw);z-index:21;
-    background:var(--panel);border-left:1px solid var(--line);
-    transform:translateX(100%);transition:transform .2s cubic-bezier(.2,.7,.2,1);
-    display:flex;flex-direction:column;
-  }
-  .drawer.open{transform:none}
-  .drawer .spine-top{height:4px;background:var(--c,var(--ink-faint));flex:none}
-  .drawer .dhead{padding:20px 24px 14px;border-bottom:1px solid var(--line)}
-  .drawer .close{position:absolute;top:14px;right:16px;background:none;border:none;
-    color:var(--ink-faint);cursor:pointer;font-size:22px;line-height:1;padding:4px}
-  .drawer .close:hover{color:var(--ink)}
-  .drawer h2{font-size:19px;font-weight:650;letter-spacing:-.015em;margin:0 30px 10px 0;line-height:1.3}
-  .drawer .authors{color:var(--ink-dim);font-size:13.5px;margin-bottom:12px}
-  .drawer .badges{display:flex;flex-wrap:wrap;gap:6px}
-  .badge{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:4px;
-    background:var(--panel-2);color:var(--ink-dim)}
-  .badge.chem{color:var(--c);border:1px solid color-mix(in srgb,var(--c) 40%,transparent)}
-  .dbody{overflow-y:auto;padding:18px 24px 40px}
-  .field{margin-bottom:18px}
-  .field .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--ink-faint);margin-bottom:5px}
-  .field .v{color:var(--ink);font-size:13.5px}
-  .field .v.abs{color:var(--ink-dim);line-height:1.65}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
-  .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
-  .stat .v{font-family:var(--mono);font-size:15px;color:var(--ink);margin-top:2px}
-  .actions{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 20px}
-  .btn{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:var(--r);
-    border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;
-    display:inline-flex;align-items:center;gap:7px;text-decoration:none}
-  .btn:hover{border-color:var(--ink-faint);text-decoration:none}
-  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-  .btn.primary:hover{filter:brightness(1.08)}
-  .btn.ghost{color:var(--ink-dim)}
-  .tagrow{display:flex;flex-wrap:wrap;gap:5px}
-  .note{font-family:var(--mono);font-size:11px;color:var(--ink-faint);margin-top:2px}
   .loading{padding:80px;text-align:center;color:var(--ink-faint);font-family:var(--mono)}
-  kbd{font-family:var(--mono);font-size:10px;background:var(--panel-2);border:1px solid var(--line);
-    border-radius:3px;padding:1px 5px;color:var(--ink-dim)}
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="sidebar" id="sidebar">
-    <div class="brand"><h1>Battery Literature</h1></div>
+    <div class="brand">
+      <h1>Battery &amp; Energy Storage Literature</h1>
+      <p>A curated reading list for battery safety &amp; energy storage research. Click a paper to open its source.</p>
+    </div>
     <div class="stamp" id="stamp">loading…</div>
     <div id="facets"></div>
   </aside>
-
   <main class="main">
     <div class="topbar">
       <div class="search">
         <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input id="q" type="search" placeholder="Search title, author, abstract, tag…  ( / )" autocomplete="off">
+        <input id="q" type="search" placeholder="Search title, author, tag…" autocomplete="off">
       </div>
-      <select class="sortsel" id="sort">
-        <option value="rel">Sort: reliability</option>
-        <option value="cites">Sort: citations</option>
-        <option value="year">Sort: year (newest)</option>
-        <option value="title">Sort: title A–Z</option>
-      </select>
       <div class="count" id="count"></div>
     </div>
-    <div class="active-chips" id="chips"></div>
     <div class="list" id="list"><div class="loading">Loading library…</div></div>
-    <div class="cmpbar" id="cmpbar">
-      <span class="lbl">COMPARE (<span id="cmpcount">0</span>/4)</span>
-      <div class="cmpchips" id="cmpchips"></div>
-      <button class="btn ghost" id="cmpclear">Clear</button>
-      <button class="btn primary" id="cmpopen">Compare ↗</button>
-    </div>
   </main>
 </div>
 
-<div class="compare-overlay" id="compareOverlay" aria-hidden="true">
-  <div class="compare-head">
-    <h2 id="compareTitle">Comparing papers</h2>
-    <button class="close" id="compareClose" aria-label="Close" style="position:static">×</button>
-  </div>
-  <div class="compare-body" id="compareBody"></div>
-</div>
-
-<div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true">
-  <div class="spine-top" id="dspine"></div>
-  <button class="close" id="dclose" aria-label="Close">×</button>
-  <div class="dhead" id="dhead"></div>
-  <div class="dbody" id="dbody"></div>
-</aside>
-
 <script>
-/* --------------------------------------------------------------------------
-   VIEW MODE — personal vs shared
-   "Open local file" points at a path on YOUR machine (OneDrive), so it only
-   works for you. When you share the deployed site, colleagues need the DOI /
-   web link instead. This auto-detects: on localhost or file:// it's the
-   personal view (local-file button shown); on a real deployed domain
-   (Cloudflare Pages, etc.) it's the shared view (local file hidden, DOI is
-   the read link). Force it either way with ?mode=personal or ?mode=shared
-   in the URL if you ever need to.
--------------------------------------------------------------------------- */
-const VIEW_MODE = (()=>{
-  const forced = new URLSearchParams(location.search).get("mode");
-  if(forced==="personal"||forced==="shared") return forced;
-  const h = location.hostname;
-  const isLocal = h==="localhost" || h==="127.0.0.1" || h==="" || location.protocol==="file:";
-  return isLocal ? "personal" : "shared";
-})();
-
-const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-const RELORDER = {High:3,Medium:2,Low:1,Unverified:0,"":0};
-
-let DATA=null, STATE={q:"", sort:"rel", filters:{chemistry:new Set(),study_type:new Set(),type:new Set(),reliability_label:new Set(),tags:new Set()}, compare:new Set()};
-const CMP_MAX = 4;
+const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
+let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set()}};
 
 const FACET_DEFS = [
   {key:"chemistry", label:"Chemistry", chem:true},
-  {key:"reliability_label", label:"Reliability"},
-  {key:"study_type", label:"Study type"},
-  {key:"type", label:"Document type"},
   {key:"tags", label:"Tags", limit:24},
 ];
 
@@ -322,35 +111,40 @@ async function boot(){
     DATA = await r.json();
   }catch(e){
     document.getElementById("list").innerHTML =
-      '<div class="empty"><p class="big">Couldn\'t load papers.json</p>'+
-      '<p>Make sure papers.json sits next to index.html, and you\'re serving over http (not file://).</p></div>';
+      '<div class="empty"><p class="big">Couldn\'t load the library</p><p>papers.json must sit next to index.html.</p></div>';
     return;
   }
+  // Public list only includes papers with a real place to send someone —
+  // a title with nowhere to click isn't useful here.
+  PAPERS = DATA.papers.filter(p => (p.web_link||"").trim() || (p.doi||"").trim());
   const d = new Date(DATA.generated_at);
   document.getElementById("stamp").textContent =
-    DATA.count + " papers · updated " + (isNaN(d)? "—" : d.toISOString().slice(0,10)) +
-    (VIEW_MODE==="shared" ? " · shared view" : "");
+    PAPERS.length + " papers · updated " + (isNaN(d)? "—" : d.toISOString().slice(0,10));
   buildFacets();
   bind();
   render();
 }
 
 function buildFacets(){
+  const counts = {chemistry:{}, tags:{}};
+  for(const p of PAPERS){
+    const c = String(p.chemistry||"").trim(); if(c) counts.chemistry[c]=(counts.chemistry[c]||0)+1;
+    for(const t of (p.tags_list||[])) if(!t.startsWith("chem:")) counts.tags[t]=(counts.tags[t]||0)+1;
+  }
   const host = document.getElementById("facets");
   host.innerHTML = "";
   for(const def of FACET_DEFS){
-    let opts = (DATA.facets[def.key]||[]);
+    let opts = Object.entries(counts[def.key]).sort((a,b)=>b[1]-a[1]);
     if(def.limit) opts = opts.slice(0, def.limit);
     if(!opts.length) continue;
     const wrap = document.createElement("div");
     wrap.className = "facet"; wrap.dataset.key = def.key;
     wrap.innerHTML = `<h3>${def.label}<button data-clear="${def.key}">clear</button></h3>`;
-    for(const o of opts){
+    for(const [val,ct] of opts){
       const el = document.createElement("div");
-      el.className = "opt " + (def.chem?CHEM_CLASS(o.value):"");
-      el.dataset.key = def.key; el.dataset.val = o.value;
-      el.innerHTML = `<span class="dot"></span><span class="lab">${esc(o.value)}</span>`+
-                     (o.count?`<span class="ct">${o.count}</span>`:"");
+      el.className = "opt " + (def.chem?CHEM_CLASS(val):"");
+      el.dataset.key = def.key; el.dataset.val = val;
+      el.innerHTML = `<span class="dot"></span><span class="lab">${esc(val)}</span><span class="ct">${ct}</span>`;
       wrap.appendChild(el);
     }
     host.appendChild(wrap);
@@ -370,66 +164,14 @@ function bind(){
   });
   const q = document.getElementById("q");
   q.addEventListener("input",()=>{STATE.q=q.value.trim().toLowerCase();render();});
-  document.getElementById("sort").addEventListener("change",e=>{STATE.sort=e.target.value;render();});
-  document.getElementById("chips").addEventListener("click",e=>{
-    const c=e.target.closest(".chip"); if(!c)return;
-    STATE.filters[c.dataset.key].delete(c.dataset.val); render();
-  });
-  document.getElementById("list").addEventListener("click",e=>{
-    const card=e.target.closest(".card"); if(card && !e.target.closest(".cmp-wrap")) openDrawer(+card.dataset.i);
-  });
-  document.getElementById("list").addEventListener("change",e=>{
-    const cb=e.target.closest(".cmp-check"); if(!cb) return;
-    const i=+cb.dataset.i;
-    if(cb.checked){
-      if(STATE.compare.size>=CMP_MAX){ cb.checked=false; return; }
-      STATE.compare.add(i);
-    } else {
-      STATE.compare.delete(i);
-    }
-    updateCompareUI();
-  });
-  document.getElementById("dclose").addEventListener("click",closeDrawer);
-  document.getElementById("scrim").addEventListener("click",closeDrawer);
-  document.getElementById("cmpclear").addEventListener("click",()=>{
-    STATE.compare.clear(); updateCompareUI();
-    document.querySelectorAll(".cmp-check").forEach(cb=>cb.checked=false);
-  });
-  document.getElementById("cmpchips").addEventListener("click",e=>{
-    const x=e.target.closest("[data-rm]"); if(!x) return;
-    const i=+x.dataset.rm; STATE.compare.delete(i); updateCompareUI();
-    const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
-  });
-  document.getElementById("cmpopen").addEventListener("click", openCompare);
-  document.getElementById("compareClose").addEventListener("click", closeCompare);
-  document.addEventListener("keydown",e=>{
-    if(e.key==="/" && document.activeElement!==q){e.preventDefault();q.focus();}
-    if(e.key==="Escape"){ closeDrawer(); closeCompare(); }
-  });
-}
-
-function updateCompareUI(){
-  const n = STATE.compare.size;
-  document.getElementById("cmpcount").textContent = n;
-  document.getElementById("cmpbar").classList.toggle("show", n>0);
-  document.querySelectorAll(".card").forEach(c=>{
-    c.classList.toggle("selected", STATE.compare.has(+c.dataset.i));
-  });
-  const chips = [...STATE.compare].map(i=>{
-    const p = DATA.papers[i];
-    return `<span class="cmpchip"><span class="t">${esc(p.title)}</span><span class="x" data-rm="${i}">×</span></span>`;
-  });
-  document.getElementById("cmpchips").innerHTML = chips.join("");
 }
 
 function matches(p){
   if(STATE.q){
-    const terms=STATE.q.split(/\s+/).filter(Boolean);
-    for(const t of terms) if(!p._search.includes(t)) return false;
+    const blob = [(p.title||""),(p.all_authors||""),(p.tags||"")].join(" ").toLowerCase();
+    for(const t of STATE.q.split(/\s+/).filter(Boolean)) if(!blob.includes(t)) return false;
   }
-  for(const key of ["chemistry","study_type","type","reliability_label"]){
-    const s=STATE.filters[key]; if(s.size && !s.has(String(p[key]||""))) return false;
-  }
+  if(STATE.filters.chemistry.size && !STATE.filters.chemistry.has(String(p.chemistry||""))) return false;
   if(STATE.filters.tags.size){
     const tl=new Set(p.tags_list||[]);
     for(const t of STATE.filters.tags) if(!tl.has(t)) return false;
@@ -437,182 +179,41 @@ function matches(p){
   return true;
 }
 
-function sortRows(rows){
-  const by=STATE.sort;
-  const num=v=>{const n=parseFloat(v);return isNaN(n)?-1:n;};
-  rows.sort((a,b)=>{
-    if(by==="rel"){ const d=(RELORDER[b.reliability_label]||0)-(RELORDER[a.reliability_label]||0); return d||num(b.reliability)-num(a.reliability);}
-    if(by==="cites") return num(b.citations)-num(a.citations);
-    if(by==="year")  return num(b.year)-num(a.year);
-    if(by==="title") return String(a.title).localeCompare(String(b.title));
-    return 0;
-  });
-  return rows;
-}
-
 function render(){
-  const rows = sortRows(DATA.papers.filter(matches));
-  // sync facet active states
+  const rows = PAPERS.filter(matches);
   document.querySelectorAll(".facet").forEach(f=>{
     const key=f.dataset.key, s=STATE.filters[key];
     f.classList.toggle("has-active", s.size>0);
     f.querySelectorAll(".opt").forEach(o=>o.classList.toggle("on", s.has(o.dataset.val)));
   });
-  // active chips
-  const chips=[];
-  for(const key of Object.keys(STATE.filters))
-    for(const v of STATE.filters[key])
-      chips.push(`<span class="chip" data-key="${key}" data-val="${esc(v)}">${esc(v)} <span class="x">×</span></span>`);
-  document.getElementById("chips").innerHTML = chips.join("");
-  // count
-  document.getElementById("count").innerHTML = `<b>${rows.length}</b> of ${DATA.count}`;
-  // list
-  const host=document.getElementById("list");
+  document.getElementById("count").innerHTML = `<b>${rows.length}</b> of ${PAPERS.length}`;
+  const host = document.getElementById("list");
   if(!rows.length){
-    host.innerHTML='<div class="empty"><p class="big">No papers match</p><p>Try removing a filter or broadening your search.</p></div>';
+    host.innerHTML = '<div class="empty"><p class="big">No papers match</p><p>Try removing a filter or broadening your search.</p></div>';
     return;
   }
   host.innerHTML = rows.map(cardHTML).join("");
 }
 
 function cardHTML(p){
-  const i = DATA.papers.indexOf(p);
-  const rel = p.reliability_label||"Unverified";
-  const relN = (p.reliability!=null && p.reliability!=="")?`<span class="n">${esc(p.reliability)}</span>`:"";
-  const tags=(p.tags_list||[]).filter(t=>!t.startsWith("chem:")).slice(0,5)
+  const href = (p.web_link||"").trim() || "https://doi.org/"+encodeURI(String(p.doi).trim());
+  const tags = (p.tags_list||[]).filter(t=>!t.startsWith("chem:")).slice(0,5)
     .map(t=>`<span class="tag">${esc(t)}</span>`).join("");
-  const yr=p.year?esc(p.year):"—";
-  const venue=p.journal_venue?esc(p.journal_venue):(p.type?esc(p.type):"");
-  const checked = STATE.compare.has(i) ? "checked" : "";
-  return `<article class="card ${CHEM_CLASS(p.chemistry)} ${checked?'selected':''}" data-i="${i}">
+  const yr = p.year?esc(p.year):"—";
+  const venue = p.journal_venue?esc(p.journal_venue):"";
+  return `<a class="card ${CHEM_CLASS(p.chemistry)}" href="${esc(href)}" target="_blank" rel="noopener">
     <div class="spine"></div>
-    <div class="cmp-wrap"><input type="checkbox" class="cmp-check" data-i="${i}" ${checked} title="Add to comparison" aria-label="Add to comparison" onclick="event.stopPropagation()"></div>
     <div class="body">
       <p class="t">${esc(p.title)}</p>
       <div class="meta">
         <span class="chem">${esc(p.chemistry)}</span>
         <span>${yr}</span>
         ${venue?`<span>${venue}</span>`:""}
-        ${p.study_type&&p.study_type!=="unknown"?`<span>${esc(p.study_type)}</span>`:""}
       </div>
       ${tags?`<div class="tags">${tags}</div>`:""}
     </div>
-    <div class="rail">
-      <span class="rel ${rel}">${esc(rel)} ${relN}</span>
-      ${p.citations?`<span class="cites"><b>${esc(p.citations)}</b> cites</span>`:""}
-    </div>
-  </article>`;
-}
-
-function openDrawer(i){
-  const p=DATA.papers[i]; if(!p)return;
-  const chemCls=CHEM_CLASS(p.chemistry);
-  document.getElementById("dspine").className="spine-top "+chemCls;
-  const rel=p.reliability_label||"Unverified";
-  document.getElementById("dhead").innerHTML = `
-    <h2>${esc(p.title)}</h2>
-    ${p.all_authors?`<div class="authors">${esc(p.all_authors)}</div>`:""}
-    <div class="badges ${chemCls}">
-      <span class="badge chem">${esc(p.chemistry)}</span>
-      ${p.year?`<span class="badge">${esc(p.year)}</span>`:""}
-      ${p.type&&p.type!=="unknown"?`<span class="badge">${esc(p.type)}</span>`:""}
-      ${p.study_type&&p.study_type!=="unknown"?`<span class="badge">${esc(p.study_type)}</span>`:""}
-      <span class="badge rel ${rel}" style="background:transparent">${esc(rel)}${p.reliability?" · "+esc(p.reliability):""}</span>
-    </div>`;
-
-  const local = (p.current_path||"").trim();
-  const fileHref = local ? "file:///"+encodeURI(local.replace(/\\/g,"/")) : "";
-  // Read link: prefer the explicit web_link, else build one from the DOI.
-  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
-  const showLocal = VIEW_MODE==="personal" && fileHref;
-  const abs=(p.abstract||"").trim();
-  const meth=(p.methods_raw||"").trim();
-  const tags=(p.tags_list||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("");
-
-  document.getElementById("dbody").innerHTML = `
-    <div class="actions">
-      ${readHref?`<a class="btn primary" href="${esc(readHref)}" target="_blank" rel="noopener">Read paper ↗</a>`:""}
-      ${showLocal?`<a class="btn" href="${fileHref}">Open local file</a>`:""}
-      ${p.doi?`<button class="btn ghost" data-copy="${esc(p.doi)}">Copy DOI</button>`:""}
-    </div>
-    ${(!readHref)?`<div class="note" style="margin:-12px 0 18px">No DOI or web link on record${showLocal?" — open the local file above":""}.</div>`:""}
-
-    <div class="grid2" style="margin-bottom:20px">
-      ${stat("Reliability", (p.reliability||"—")+(p.reliability_label?" · "+p.reliability_label:""))}
-      ${stat("Citations", p.citations||"—")}
-      ${stat("Journal / venue", p.journal_venue||"—")}
-      ${stat("Lead author", p.lead_author||"—")}
-    </div>
-
-    ${abs?field("Abstract", `<div class="v abs">${esc(abs)}</div>`):""}
-    ${meth?field("Methods (extracted)", `<div class="v abs">${esc(meth)}</div>`):""}
-    ${tags?field("Tags", `<div class="tagrow">${tags}</div>`):""}
-    ${p.doi?field("DOI", `<div class="v" style="font-family:var(--mono);font-size:12px">${esc(p.doi)}</div>`):""}
-    ${p.target_folder?field("Filed under", `<div class="v" style="font-family:var(--mono);font-size:12px;color:var(--ink-dim)">${esc(p.target_folder)}</div>`):""}
-    ${p.possible_duplicate?`<div class="note">⚠ ${esc(p.possible_duplicate)}</div>`:""}
-  `;
-  document.getElementById("dbody").querySelectorAll("[data-copy]").forEach(b=>{
-    b.addEventListener("click",()=>{navigator.clipboard?.writeText(b.dataset.copy);b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy DOI",1200);});
-  });
-  document.getElementById("scrim").classList.add("open");
-  const dr=document.getElementById("drawer"); dr.classList.add("open"); dr.setAttribute("aria-hidden","false");
-}
-function stat(k,v){return `<div class="stat"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`;}
-function field(k,vHTML){return `<div class="field"><div class="k">${k}</div>${vHTML}</div>`;}
-function closeDrawer(){
-  document.getElementById("scrim").classList.remove("open");
-  const dr=document.getElementById("drawer"); dr.classList.remove("open"); dr.setAttribute("aria-hidden","true");
-}
-
-function openCompare(){
-  if(!STATE.compare.size) return;
-  const idxs = [...STATE.compare];
-  document.getElementById("compareTitle").textContent = `Comparing ${idxs.length} paper${idxs.length>1?"s":""}`;
-  document.getElementById("compareBody").innerHTML =
-    `<div class="compare-grid">${idxs.map(compareColHTML).join("")}</div>`;
-  document.getElementById("compareBody").querySelectorAll("[data-rm-col]").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      const i=+btn.dataset.rmCol;
-      STATE.compare.delete(i); updateCompareUI();
-      const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
-      if(STATE.compare.size) openCompare(); else closeCompare();
-    });
-  });
-  const ov=document.getElementById("compareOverlay");
-  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
-}
-
-function compareColHTML(i){
-  const p = DATA.papers[i]; if(!p) return "";
-  const chemCls = CHEM_CLASS(p.chemistry);
-  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
-  const abs = (p.abstract||"").trim();
-  // prefer the LLM methodology extraction (structured, concise) over the raw
-  // Methods-section excerpt when both exist — falls back cleanly either way.
-  const meth = (p.methodology_llm||"").trim() || (p.methods_raw||"").trim();
-  const methLabel = (p.methodology_llm||"").trim() ? "Methodology (extracted)" : "Methods (raw excerpt)";
-  const takeaway = (p.key_takeaway_phase_2||"").trim();
-  return `<div class="compare-col ${chemCls}">
-    <div class="spine-top"></div>
-    <div class="chead">
-      <button class="rm" data-rm-col="${i}" aria-label="Remove from comparison">×</button>
-      <h3>${esc(p.title)}</h3>
-      <div class="meta2">${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}${p.study_type&&p.study_type!=="unknown"?" · "+esc(p.study_type):""}</div>
-    </div>
-    <div class="cbody">
-      <div class="actions" style="margin:0 0 14px">
-        ${readHref?`<a class="btn primary" href="${esc(readHref)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
-      </div>
-      ${abs?field("Abstract", `<div class="v abs">${esc(abs)}</div>`):`<div class="note">No abstract on record.</div>`}
-      ${meth?field(methLabel, `<div class="v abs">${esc(meth)}</div>`):""}
-      ${takeaway?field("Key takeaway", `<div class="v">${esc(takeaway)}</div>`):""}
-    </div>
-  </div>`;
-}
-
-function closeCompare(){
-  const ov=document.getElementById("compareOverlay");
-  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
+    <div class="go">Read ↗</div>
+  </a>`;
 }
 
 boot();
