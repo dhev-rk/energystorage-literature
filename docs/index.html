@@ -13,11 +13,11 @@
      fixed hue, shown as a left spine on cards and as the filter's active color.
   ------------------------------------------------------------------------- */
   :root{
-    --bg:#0e1116; --panel:#161b22; --panel-2:#1c232d; --line:#2a323d;
-    --ink:#e6edf3; --ink-dim:#9aa7b4; --ink-faint:#68737f;
-    --accent:#4cc4c0;             /* teal — instrument readout */
-    --accent-ink:#0e1116;
-    --hi:#5bd68a; --med:#e3b341; --lo:#e06c5e; --unv:#7d8590;
+    --bg:#ffffff; --panel:#f6f7f9; --panel-2:#eceef1; --line:#dde1e6;
+    --ink:#1a1f26; --ink-dim:#5b6570; --ink-faint:#8a94a0;
+    --accent:#0f8f8a;             /* teal — instrument readout, darkened for contrast on white */
+    --accent-ink:#ffffff;
+    --hi:#1a8f52; --med:#a5720a; --lo:#c23f2f; --unv:#6b7280;
     --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
     --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     --r:6px;
@@ -81,7 +81,7 @@
   /* ---- main ---- */
   .main{overflow-y:auto;position:relative}
   .topbar{
-    position:sticky;top:0;z-index:5;background:rgba(14,17,22,.86);
+    position:sticky;top:0;z-index:5;background:rgba(255,255,255,.86);
     backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
     padding:14px 22px;display:flex;gap:14px;align-items:center;
   }
@@ -142,6 +142,49 @@
   .empty{padding:80px 22px;text-align:center;color:var(--ink-faint)}
   .empty p{margin:6px 0}
   .empty .big{font-size:16px;color:var(--ink-dim)}
+
+  /* ---- compare selection ---- */
+  .card{position:relative}
+  .card.selected{outline:2px solid var(--accent);outline-offset:-2px}
+  .cmp-wrap{display:flex;align-items:center;padding-left:4px}
+  .cmp-wrap input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+  .cmpbar{
+    position:sticky;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
+    padding:10px 22px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    box-shadow:0 -2px 10px rgba(0,0,0,.05);
+  }
+  .cmpbar.show{display:flex}
+  .cmpbar .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  .cmpbar .cmpchips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+  .cmpbar .cmpchip{
+    font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px;
+  }
+  .cmpbar .cmpchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmpbar .cmpchip .x{cursor:pointer;color:var(--ink-faint);font-weight:700}
+  .cmpbar .cmpchip .x:hover{color:var(--lo)}
+
+  /* ---- compare overlay ---- */
+  .compare-overlay{
+    position:fixed;inset:0;z-index:25;background:var(--bg);display:none;
+    flex-direction:column;
+  }
+  .compare-overlay.open{display:flex}
+  .compare-head{padding:16px 22px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex:none}
+  .compare-head h2{font-size:16px;margin:0;font-weight:650}
+  .compare-body{flex:1;overflow:auto;padding:20px 22px 40px}
+  .compare-grid{display:grid;gap:18px;align-items:start;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .compare-col{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+  .compare-col .spine-top{height:4px;background:var(--c,var(--ink-faint))}
+  .compare-col .chead{padding:14px 16px 12px;border-bottom:1px solid var(--line);position:relative}
+  .compare-col .chead .rm{position:absolute;top:10px;right:10px;background:none;border:none;
+    color:var(--ink-faint);cursor:pointer;font-size:16px;padding:2px}
+  .compare-col .chead .rm:hover{color:var(--lo)}
+  .compare-col .chead h3{font-size:14px;margin:0 22px 6px 0;line-height:1.35}
+  .compare-col .chead .meta2{font-size:11.5px;color:var(--ink-dim)}
+  .compare-col .cbody{padding:12px 16px 16px}
 
   /* ---- detail drawer ---- */
   .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;
@@ -213,7 +256,21 @@
     </div>
     <div class="active-chips" id="chips"></div>
     <div class="list" id="list"><div class="loading">Loading library…</div></div>
+    <div class="cmpbar" id="cmpbar">
+      <span class="lbl">COMPARE (<span id="cmpcount">0</span>/4)</span>
+      <div class="cmpchips" id="cmpchips"></div>
+      <button class="btn ghost" id="cmpclear">Clear</button>
+      <button class="btn primary" id="cmpopen">Compare ↗</button>
+    </div>
   </main>
+</div>
+
+<div class="compare-overlay" id="compareOverlay" aria-hidden="true">
+  <div class="compare-head">
+    <h2 id="compareTitle">Comparing papers</h2>
+    <button class="close" id="compareClose" aria-label="Close" style="position:static">×</button>
+  </div>
+  <div class="compare-body" id="compareBody"></div>
 </div>
 
 <div class="scrim" id="scrim"></div>
@@ -247,7 +304,8 @@ const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const RELORDER = {High:3,Medium:2,Low:1,Unverified:0,"":0};
 
-let DATA=null, STATE={q:"", sort:"rel", filters:{chemistry:new Set(),study_type:new Set(),type:new Set(),reliability_label:new Set(),tags:new Set()}};
+let DATA=null, STATE={q:"", sort:"rel", filters:{chemistry:new Set(),study_type:new Set(),type:new Set(),reliability_label:new Set(),tags:new Set()}, compare:new Set()};
+const CMP_MAX = 4;
 
 const FACET_DEFS = [
   {key:"chemistry", label:"Chemistry", chem:true},
@@ -318,14 +376,50 @@ function bind(){
     STATE.filters[c.dataset.key].delete(c.dataset.val); render();
   });
   document.getElementById("list").addEventListener("click",e=>{
-    const card=e.target.closest(".card"); if(card) openDrawer(+card.dataset.i);
+    const card=e.target.closest(".card"); if(card && !e.target.closest(".cmp-wrap")) openDrawer(+card.dataset.i);
+  });
+  document.getElementById("list").addEventListener("change",e=>{
+    const cb=e.target.closest(".cmp-check"); if(!cb) return;
+    const i=+cb.dataset.i;
+    if(cb.checked){
+      if(STATE.compare.size>=CMP_MAX){ cb.checked=false; return; }
+      STATE.compare.add(i);
+    } else {
+      STATE.compare.delete(i);
+    }
+    updateCompareUI();
   });
   document.getElementById("dclose").addEventListener("click",closeDrawer);
   document.getElementById("scrim").addEventListener("click",closeDrawer);
+  document.getElementById("cmpclear").addEventListener("click",()=>{
+    STATE.compare.clear(); updateCompareUI();
+    document.querySelectorAll(".cmp-check").forEach(cb=>cb.checked=false);
+  });
+  document.getElementById("cmpchips").addEventListener("click",e=>{
+    const x=e.target.closest("[data-rm]"); if(!x) return;
+    const i=+x.dataset.rm; STATE.compare.delete(i); updateCompareUI();
+    const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+  });
+  document.getElementById("cmpopen").addEventListener("click", openCompare);
+  document.getElementById("compareClose").addEventListener("click", closeCompare);
   document.addEventListener("keydown",e=>{
     if(e.key==="/" && document.activeElement!==q){e.preventDefault();q.focus();}
-    if(e.key==="Escape") closeDrawer();
+    if(e.key==="Escape"){ closeDrawer(); closeCompare(); }
   });
+}
+
+function updateCompareUI(){
+  const n = STATE.compare.size;
+  document.getElementById("cmpcount").textContent = n;
+  document.getElementById("cmpbar").classList.toggle("show", n>0);
+  document.querySelectorAll(".card").forEach(c=>{
+    c.classList.toggle("selected", STATE.compare.has(+c.dataset.i));
+  });
+  const chips = [...STATE.compare].map(i=>{
+    const p = DATA.papers[i];
+    return `<span class="cmpchip"><span class="t">${esc(p.title)}</span><span class="x" data-rm="${i}">×</span></span>`;
+  });
+  document.getElementById("cmpchips").innerHTML = chips.join("");
 }
 
 function matches(p){
@@ -389,8 +483,10 @@ function cardHTML(p){
     .map(t=>`<span class="tag">${esc(t)}</span>`).join("");
   const yr=p.year?esc(p.year):"—";
   const venue=p.journal_venue?esc(p.journal_venue):(p.type?esc(p.type):"");
-  return `<article class="card ${CHEM_CLASS(p.chemistry)}" data-i="${i}">
+  const checked = STATE.compare.has(i) ? "checked" : "";
+  return `<article class="card ${CHEM_CLASS(p.chemistry)} ${checked?'selected':''}" data-i="${i}">
     <div class="spine"></div>
+    <div class="cmp-wrap"><input type="checkbox" class="cmp-check" data-i="${i}" ${checked} title="Add to comparison" aria-label="Add to comparison" onclick="event.stopPropagation()"></div>
     <div class="body">
       <p class="t">${esc(p.title)}</p>
       <div class="meta">
@@ -466,6 +562,57 @@ function field(k,vHTML){return `<div class="field"><div class="k">${k}</div>${vH
 function closeDrawer(){
   document.getElementById("scrim").classList.remove("open");
   const dr=document.getElementById("drawer"); dr.classList.remove("open"); dr.setAttribute("aria-hidden","true");
+}
+
+function openCompare(){
+  if(!STATE.compare.size) return;
+  const idxs = [...STATE.compare];
+  document.getElementById("compareTitle").textContent = `Comparing ${idxs.length} paper${idxs.length>1?"s":""}`;
+  document.getElementById("compareBody").innerHTML =
+    `<div class="compare-grid">${idxs.map(compareColHTML).join("")}</div>`;
+  document.getElementById("compareBody").querySelectorAll("[data-rm-col]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const i=+btn.dataset.rmCol;
+      STATE.compare.delete(i); updateCompareUI();
+      const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+      if(STATE.compare.size) openCompare(); else closeCompare();
+    });
+  });
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+}
+
+function compareColHTML(i){
+  const p = DATA.papers[i]; if(!p) return "";
+  const chemCls = CHEM_CLASS(p.chemistry);
+  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const abs = (p.abstract||"").trim();
+  // prefer the LLM methodology extraction (structured, concise) over the raw
+  // Methods-section excerpt when both exist — falls back cleanly either way.
+  const meth = (p.methodology_llm||"").trim() || (p.methods_raw||"").trim();
+  const methLabel = (p.methodology_llm||"").trim() ? "Methodology (extracted)" : "Methods (raw excerpt)";
+  const takeaway = (p.key_takeaway_phase_2||"").trim();
+  return `<div class="compare-col ${chemCls}">
+    <div class="spine-top"></div>
+    <div class="chead">
+      <button class="rm" data-rm-col="${i}" aria-label="Remove from comparison">×</button>
+      <h3>${esc(p.title)}</h3>
+      <div class="meta2">${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}${p.study_type&&p.study_type!=="unknown"?" · "+esc(p.study_type):""}</div>
+    </div>
+    <div class="cbody">
+      <div class="actions" style="margin:0 0 14px">
+        ${readHref?`<a class="btn primary" href="${esc(readHref)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
+      </div>
+      ${abs?field("Abstract", `<div class="v abs">${esc(abs)}</div>`):`<div class="note">No abstract on record.</div>`}
+      ${meth?field(methLabel, `<div class="v abs">${esc(meth)}</div>`):""}
+      ${takeaway?field("Key takeaway", `<div class="v">${esc(takeaway)}</div>`):""}
+    </div>
+  </div>`;
+}
+
+function closeCompare(){
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
 }
 
 boot();
