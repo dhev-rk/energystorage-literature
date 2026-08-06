@@ -296,12 +296,16 @@
    the read link). Force it either way with ?mode=personal or ?mode=shared
    in the URL if you ever need to.
 -------------------------------------------------------------------------- */
+/* ---- personal vs shared ---------------------------------------------------
+   lab.html is itself the dedicated private page now (never linked from the
+   public index.html) — so unlike before, no hostname/query-param detection
+   is needed here. It's always personal mode. If you ever want to preview
+   what the shared/DOI-only view would look like, force it with
+   ?mode=shared in the URL.
+-------------------------------------------------------------------------- */
 const VIEW_MODE = (()=>{
   const forced = new URLSearchParams(location.search).get("mode");
-  if(forced==="personal"||forced==="shared") return forced;
-  const h = location.hostname;
-  const isLocal = h==="localhost" || h==="127.0.0.1" || h==="" || location.protocol==="file:";
-  return isLocal ? "personal" : "shared";
+  return forced==="shared" ? "shared" : "personal";
 })();
 
 const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
