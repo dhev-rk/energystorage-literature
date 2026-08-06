@@ -46,7 +46,8 @@
   .opt .ct{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
 
   .main{overflow-y:auto}
-  .topbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+  .stickyhead{position:sticky;top:0;z-index:5}
+  .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
     border-bottom:1px solid var(--line);padding:14px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
   .search{position:relative;flex:1;min-width:200px;max-width:480px}
   .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
@@ -78,18 +79,18 @@
   .cmp-wrap{flex:none;display:flex;align-items:center;padding:0 4px 0 14px}
   .cmp-wrap input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
   .cmpbar{
-    position:sticky;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
+    position:sticky;top:0;z-index:5;background:var(--accent);color:var(--accent-ink);
     padding:10px 22px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
-    box-shadow:0 -2px 10px rgba(0,0,0,.05);
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
   }
   .cmpbar.show{display:flex}
-  .cmpbar .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  .cmpbar .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.04em;opacity:.85}
   .cmpbar .cmpchips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
-  .cmpbar .cmpchip{font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
-    padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px}
+  .cmpbar .cmpchip{font-size:12px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+    border-radius:var(--r);padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px;color:inherit}
   .cmpbar .cmpchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cmpbar .cmpchip .x{cursor:pointer;color:var(--ink-faint);font-weight:700}
-  .cmpbar .cmpchip .x:hover{color:#c23f2f}
+  .cmpbar .cmpchip .x{cursor:pointer;color:inherit;font-weight:700;opacity:.8}
+  .cmpbar .cmpchip .x:hover{opacity:1}
   .btn{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:var(--r);
     border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;
     display:inline-flex;align-items:center;gap:7px;text-decoration:none}
@@ -131,6 +132,7 @@
     <div id="facets"></div>
   </aside>
   <main class="main">
+    <div class="stickyhead">
     <div class="topbar">
       <div class="search">
         <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -138,13 +140,14 @@
       </div>
       <div class="count" id="count"></div>
     </div>
-    <div class="list" id="list"><div class="loading">Loading library…</div></div>
     <div class="cmpbar" id="cmpbar">
       <span class="lbl">COMPARE (<span id="cmpcount">0</span>/4)</span>
       <div class="cmpchips" id="cmpchips"></div>
       <button class="btn ghost" id="cmpclear">Clear</button>
       <button class="btn primary" id="cmpopen">Compare abstracts ↗</button>
     </div>
+    </div>
+    <div class="list" id="list"><div class="loading">Loading library…</div></div>
   </main>
 </div>
 
