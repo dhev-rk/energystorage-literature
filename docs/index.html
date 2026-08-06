@@ -70,6 +70,54 @@
   .empty{padding:80px 22px;text-align:center;color:var(--ink-faint)}
   .empty .big{font-size:16px;color:var(--ink-dim)}
   .loading{padding:80px;text-align:center;color:var(--ink-faint);font-family:var(--mono)}
+
+  /* ---- compare (public: title/authors/chemistry/abstract + DOI only —
+     no methodology, no local file, no notes bridge; those stay in lab.html) ---- */
+  .card{position:relative}
+  .card.selected{outline:2px solid var(--accent);outline-offset:-2px}
+  .cmp-wrap{flex:none;display:flex;align-items:center;padding:0 4px 0 14px}
+  .cmp-wrap input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+  .cmpbar{
+    position:sticky;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);
+    padding:10px 22px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    box-shadow:0 -2px 10px rgba(0,0,0,.05);
+  }
+  .cmpbar.show{display:flex}
+  .cmpbar .lbl{font-family:var(--mono);font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+  .cmpbar .cmpchips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+  .cmpbar .cmpchip{font-size:12px;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
+    padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px}
+  .cmpbar .cmpchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmpbar .cmpchip .x{cursor:pointer;color:var(--ink-faint);font-weight:700}
+  .cmpbar .cmpchip .x:hover{color:#c23f2f}
+  .btn{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:var(--r);
+    border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+  .btn:hover{border-color:var(--ink-faint);text-decoration:none}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+  .btn.ghost{color:var(--ink-dim)}
+  .compare-overlay{position:fixed;inset:0;z-index:25;background:var(--bg);display:none;flex-direction:column}
+  .compare-overlay.open{display:flex}
+  .compare-head{padding:16px 22px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex:none}
+  .compare-head h2{font-size:16px;margin:0;font-weight:650}
+  .compare-head .close{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:22px;padding:4px}
+  .compare-body{flex:1;overflow:auto;padding:20px 22px 40px}
+  .compare-grid{display:grid;gap:18px;align-items:start;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .compare-col{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+  .compare-col .spine-top{height:4px;background:var(--c,var(--ink-faint))}
+  .compare-col .chead{padding:14px 16px 12px;border-bottom:1px solid var(--line);position:relative}
+  .compare-col .chead .rm{position:absolute;top:10px;right:10px;background:none;border:none;
+    color:var(--ink-faint);cursor:pointer;font-size:16px;padding:2px}
+  .compare-col .chead h3{font-size:14px;margin:0 22px 6px 0;line-height:1.35}
+  .compare-col .chead .meta2{font-size:11.5px;color:var(--ink-dim)}
+  .compare-col .cbody{padding:12px 16px 16px}
+  .field{margin-bottom:16px}
+  .field .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:5px}
+  .field .v{color:var(--ink);font-size:13.5px}
+  .field .v.abs{color:var(--ink-dim);line-height:1.65}
+  .note{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
 </style>
 </head>
 <body>
@@ -77,7 +125,7 @@
   <aside class="sidebar" id="sidebar">
     <div class="brand">
       <h1>Battery &amp; Energy Storage Literature</h1>
-      <p>A curated reading list for battery safety &amp; energy storage research. Click a paper to open its source.</p>
+      <p>A curated reading list for battery safety &amp; energy storage research. Select papers to compare abstracts, or click through to the source.</p>
     </div>
     <div class="stamp" id="stamp">loading…</div>
     <div id="facets"></div>
@@ -91,13 +139,28 @@
       <div class="count" id="count"></div>
     </div>
     <div class="list" id="list"><div class="loading">Loading library…</div></div>
+    <div class="cmpbar" id="cmpbar">
+      <span class="lbl">COMPARE (<span id="cmpcount">0</span>/4)</span>
+      <div class="cmpchips" id="cmpchips"></div>
+      <button class="btn ghost" id="cmpclear">Clear</button>
+      <button class="btn primary" id="cmpopen">Compare abstracts ↗</button>
+    </div>
   </main>
+</div>
+
+<div class="compare-overlay" id="compareOverlay" aria-hidden="true">
+  <div class="compare-head">
+    <h2 id="compareTitle">Comparing papers</h2>
+    <button class="close" id="compareClose" aria-label="Close">×</button>
+  </div>
+  <div class="compare-body" id="compareBody"></div>
 </div>
 
 <script>
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
-let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set()}};
+let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set()}, compare:new Set()};
+const CMP_MAX = 4;
 
 const FACET_DEFS = [
   {key:"chemistry", label:"Chemistry", chem:true},
@@ -164,6 +227,86 @@ function bind(){
   });
   const q = document.getElementById("q");
   q.addEventListener("input",()=>{STATE.q=q.value.trim().toLowerCase();render();});
+  document.getElementById("list").addEventListener("change",e=>{
+    const cb=e.target.closest(".cmp-check"); if(!cb) return;
+    const i=+cb.dataset.i;
+    if(cb.checked){
+      if(STATE.compare.size>=CMP_MAX){ cb.checked=false; return; }
+      STATE.compare.add(i);
+    } else STATE.compare.delete(i);
+    updateCompareUI();
+  });
+  document.getElementById("cmpclear").addEventListener("click",()=>{
+    STATE.compare.clear(); updateCompareUI();
+    document.querySelectorAll(".cmp-check").forEach(cb=>cb.checked=false);
+  });
+  document.getElementById("cmpchips").addEventListener("click",e=>{
+    const x=e.target.closest("[data-rm]"); if(!x) return;
+    const i=+x.dataset.rm; STATE.compare.delete(i); updateCompareUI();
+    const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+  });
+  document.getElementById("cmpopen").addEventListener("click", openCompare);
+  document.getElementById("compareClose").addEventListener("click", closeCompare);
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeCompare(); });
+}
+
+function updateCompareUI(){
+  const n = STATE.compare.size;
+  document.getElementById("cmpcount").textContent = n;
+  document.getElementById("cmpbar").classList.toggle("show", n>0);
+  document.querySelectorAll(".card").forEach(c=>{
+    c.classList.toggle("selected", STATE.compare.has(+c.dataset.i));
+  });
+  const chips = [...STATE.compare].map(i=>{
+    const p = PAPERS[i];
+    return `<span class="cmpchip"><span class="t">${esc(p.title)}</span><span class="x" data-rm="${i}">×</span></span>`;
+  });
+  document.getElementById("cmpchips").innerHTML = chips.join("");
+}
+
+function openCompare(){
+  if(!STATE.compare.size) return;
+  const idxs = [...STATE.compare];
+  document.getElementById("compareTitle").textContent = `Comparing ${idxs.length} paper${idxs.length>1?"s":""}`;
+  document.getElementById("compareBody").innerHTML =
+    `<div class="compare-grid">${idxs.map(compareColHTML).join("")}</div>`;
+  document.getElementById("compareBody").querySelectorAll("[data-rm-col]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const i=+btn.dataset.rmCol;
+      STATE.compare.delete(i); updateCompareUI();
+      const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+      if(STATE.compare.size) openCompare(); else closeCompare();
+    });
+  });
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+}
+
+function compareColHTML(i){
+  const p = PAPERS[i]; if(!p) return "";
+  const chemCls = CHEM_CLASS(p.chemistry);
+  const href = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const abs = (p.abstract||"").trim();
+  return `<div class="compare-col ${chemCls}">
+    <div class="spine-top"></div>
+    <div class="chead">
+      <button class="rm" data-rm-col="${i}" aria-label="Remove from comparison">×</button>
+      <h3>${esc(p.title)}</h3>
+      <div class="meta2">${p.all_authors?esc(p.all_authors)+" · ":""}${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}</div>
+    </div>
+    <div class="cbody">
+      <div style="margin:0 0 14px">
+        ${href?`<a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
+      </div>
+      ${abs?`<div class="field"><div class="k">Abstract</div><div class="v abs">${esc(abs)}</div></div>`
+           :`<div class="note">No abstract on record.</div>`}
+    </div>
+  </div>`;
+}
+
+function closeCompare(){
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
 }
 
 function matches(p){
@@ -196,13 +339,18 @@ function render(){
 }
 
 function cardHTML(p){
+  const i = PAPERS.indexOf(p);
   const href = (p.web_link||"").trim() || "https://doi.org/"+encodeURI(String(p.doi).trim());
   const tags = (p.tags_list||[]).filter(t=>!t.startsWith("chem:")).slice(0,5)
     .map(t=>`<span class="tag">${esc(t)}</span>`).join("");
   const yr = p.year?esc(p.year):"—";
   const venue = p.journal_venue?esc(p.journal_venue):"";
-  return `<a class="card ${CHEM_CLASS(p.chemistry)}" href="${esc(href)}" target="_blank" rel="noopener">
+  const checked = STATE.compare.has(i) ? "checked" : "";
+  return `<a class="card ${CHEM_CLASS(p.chemistry)} ${checked?'selected':''}" data-i="${i}" href="${esc(href)}" target="_blank" rel="noopener">
     <div class="spine"></div>
+    <div class="cmp-wrap"><input type="checkbox" class="cmp-check" data-i="${i}" ${checked}
+      title="Add to comparison" aria-label="Add to comparison"
+      onclick="event.preventDefault();event.stopPropagation()"></div>
     <div class="body">
       <p class="t">${esc(p.title)}</p>
       <div class="meta">
