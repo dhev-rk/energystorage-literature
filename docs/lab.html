@@ -303,6 +303,14 @@ const VIEW_MODE = (()=>{
 
 const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+// web_link is sometimes a stale non-URL sentinel from an upstream Excel
+// hyperlink-display-text bug — only trust it if it's actually a URL,
+// otherwise always fall back to a real doi.org link.
+function readLink(p){
+  const wl = (p.web_link||"").trim();
+  if(/^https?:\/\//i.test(wl)) return wl;
+  return p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "";
+}
 const RELORDER = {High:3,Medium:2,Low:1,Unverified:0,"":0};
 
 let DATA=null, STATE={q:"", sort:"rel", filters:{chemistry:new Set(),study_type:new Set(),type:new Set(),reliability_label:new Set(),tags:new Set()}, compare:new Set()};
@@ -525,7 +533,7 @@ function openDrawer(i){
   const local = (p.current_path||"").trim();
   const fileHref = local ? "file:///"+encodeURI(local.replace(/\\/g,"/")) : "";
   // Read link: prefer the explicit web_link, else build one from the DOI.
-  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const readHref = readLink(p);
   const showLocal = VIEW_MODE==="personal" && fileHref;
   const abs=(p.abstract||"").trim();
   const meth=(p.methods_raw||"").trim();
@@ -583,7 +591,7 @@ function field(k,vHTML){return `<div class="field"><div class="k">${k}</div>${vH
 function getVault(){ return localStorage.getItem("obsidianVault") || ""; }
 function paperMarkdown(i){
   const p = DATA.papers[i]; if(!p) return "";
-  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const readHref = readLink(p);
   const lines = [
     `# ${p.title||"Untitled"}`,
     "",
@@ -659,7 +667,7 @@ function openCompare(){
 function compareColHTML(i){
   const p = DATA.papers[i]; if(!p) return "";
   const chemCls = CHEM_CLASS(p.chemistry);
-  const readHref = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const readHref = readLink(p);
   const abs = (p.abstract||"").trim();
   // prefer the LLM methodology extraction (structured, concise) over the raw
   // Methods-section excerpt when both exist — falls back cleanly either way.

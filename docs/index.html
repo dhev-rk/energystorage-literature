@@ -159,6 +159,14 @@
 <script>
 const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
+// web_link is sometimes a stale non-URL sentinel from an upstream Excel
+// hyperlink-display-text bug — only trust it if it's actually a URL,
+// otherwise always fall back to a real doi.org link.
+function readLink(p){
+  const wl = (p.web_link||"").trim();
+  if(/^https?:\/\//i.test(wl)) return wl;
+  return p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "";
+}
 let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set()}, compare:new Set()};
 const CMP_MAX = 4;
 
@@ -179,7 +187,7 @@ async function boot(){
   }
   // Public list only includes papers with a real place to send someone —
   // a title with nowhere to click isn't useful here.
-  PAPERS = DATA.papers.filter(p => (p.web_link||"").trim() || (p.doi||"").trim());
+  PAPERS = DATA.papers.filter(p => readLink(p));
   const d = new Date(DATA.generated_at);
   document.getElementById("stamp").textContent =
     PAPERS.length + " papers · updated " + (isNaN(d)? "—" : d.toISOString().slice(0,10));
@@ -285,7 +293,7 @@ function openCompare(){
 function compareColHTML(i){
   const p = PAPERS[i]; if(!p) return "";
   const chemCls = CHEM_CLASS(p.chemistry);
-  const href = (p.web_link||"").trim() || (p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "");
+  const href = readLink(p);
   const abs = (p.abstract||"").trim();
   return `<div class="compare-col ${chemCls}">
     <div class="spine-top"></div>
@@ -293,8 +301,7 @@ function compareColHTML(i){
       <button class="rm" data-rm-col="${i}" aria-label="Remove from comparison">×</button>
       <h3>${esc(p.title)}</h3>
       <div class="meta2">${p.all_authors?esc(p.all_authors)+" · ":""}${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}</div>
-    </div>
-    <div class="cbody">
+    </div>    <div class="cbody">
       <div style="margin:0 0 14px">
         ${href?`<a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
       </div>
@@ -340,7 +347,7 @@ function render(){
 
 function cardHTML(p){
   const i = PAPERS.indexOf(p);
-  const href = (p.web_link||"").trim() || "https://doi.org/"+encodeURI(String(p.doi).trim());
+  const href = readLink(p);
   const tags = (p.tags_list||[]).filter(t=>!t.startsWith("chem:")).slice(0,5)
     .map(t=>`<span class="tag">${esc(t)}</span>`).join("");
   const yr = p.year?esc(p.year):"—";
@@ -350,7 +357,7 @@ function cardHTML(p){
     <div class="spine"></div>
     <div class="cmp-wrap"><input type="checkbox" class="cmp-check" data-i="${i}" ${checked}
       title="Add to comparison" aria-label="Add to comparison"
-      onclick="event.preventDefault();event.stopPropagation()"></div>
+      onclick="event.stopPropagation()"></div>
     <div class="body">
       <p class="t">${esc(p.title)}</p>
       <div class="meta">
