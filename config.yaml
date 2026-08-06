@@ -1,0 +1,284 @@
+# ============================================================================
+#  Battery Literature Pipeline — configuration
+#  Edit the values in this file. Nothing else needs editing to get started.
+# ============================================================================
+
+# --- Where your library lives -----------------------------------------------
+# Point this at your OneDrive library root (the folder that CONTAINS
+# 00_INBOX_ToREAD, 02_LITHIUM-ION_BATTERIES, 03_SODIUM-ION_BATTERIES, ...).
+# Use forward slashes even on Windows, or a raw path. Examples:
+#   Windows : C:/Users/you/OneDrive/Dhev - ULRI-ULSE/_WORKSPACE/02_LIBRARY
+#   Mac     : /Users/you/Library/CloudStorage/OneDrive-.../02_LIBRARY
+library_root: 'C:\Users\RajagopalanKannanDhe\OneDrive - ULRI-ULSE\_WORKSPACE\02_LIBRARY'
+
+# The matrix workbook the pipeline reads and appends to.
+matrix_path: "00_Literature_Matrices_Notes.xlsx"
+webapp_out: "docs/papers.json"
+# Optional: an external university ranking to fold into reputation scoring.
+# A CSV with columns  name,rank  (rank 1 = best). Leave blank to use OpenAlex
+# institution metrics instead. E.g. export a QS/THE/ARWU top-500 list.
+university_rankings_csv: ""
+
+# --- Safety -----------------------------------------------------------------
+# dry_run: when true, NOTHING is renamed or moved. The pipeline still reads
+#          every PDF, enriches it, scores it, and writes the matrix + a
+#          proposed-renames report so you can review before committing.
+#          RUN WITH dry_run: true FIRST. Always.
+dry_run: true
+
+# When you turn dry_run off, choose how files are placed:
+#   "copy" = originals stay put, a renamed copy goes to the topic folder (safest)
+#   "move" = the original is renamed and moved (tidier, irreversible without backup)
+file_action: "copy"
+
+# Only process this many files (useful for a first test). 0 = no limit.
+limit: 0
+
+# How many files to extract+enrich CONCURRENTLY. The slow part per file is
+# waiting on network APIs (OpenAlex/Crossref/OSTI/Semantic Scholar), not
+# local CPU work, so running several files at once overlaps that waiting
+# time instead of paying it one file at a time. 8 is a safe default; try
+# 12-16 if your connection has headroom. File renaming/copying on --commit
+# still happens one at a time (that part was never the bottleneck).
+max_workers: 6
+
+# Hard ceiling (seconds) on a single file's extraction+enrichment before the
+# pipeline gives up on it and moves on, instead of letting one stuck file
+# freeze the whole run. 480s (8 min) comfortably clears the legitimate
+# worst case (a fully-unresolved paper trying ~5 fallback APIs) with real
+# headroom. A file that hits this gets logged as "TIMEOUT" in the report —
+# check it manually (open it, check your connection) rather than assuming
+# it's corrupted; in practice this has usually turned out to be network
+# timing, not a bad file.
+file_timeout_seconds: 60
+
+# Log image files (png/jpg/tif/...) into a separate 'Images' sheet. They are
+# NOT read or OCR'd — just inventoried (path, folder, type, size, date) so you
+# know what figures/scans live in each folder. Set false to skip entirely.
+inventory_images: true
+
+# --- Incremental "new downloads" workflow -----------------------------------
+# Used by process_new_downloads.py — a lightweight entry point for filing a
+# handful of freshly-downloaded papers (1-30 at a time) without touching your
+# whole library. If set, running that script with no argument defaults to
+# this folder. You can always override by passing a folder path directly:
+#   python process_new_downloads.py "C:/Users/you/Downloads"
+new_downloads_folder: ""
+
+# --- Contact e-mail (required for the APIs' "polite pool" — just your email) -
+# Crossref and OpenAlex give faster, more reliable service when you identify
+# yourself. No signup, no key. Just put a real address here.
+contact_email: "nrkdheva@gmail.com"
+
+# --- Optional: Claude summaries ---------------------------------------------
+# If enabled, the pipeline calls the Anthropic API to write a 2-3 sentence
+# contextual summary and a one-line key takeaway per paper. If disabled, it
+# falls back to the OpenAlex abstract + concept tags (free, no key).
+use_claude_summaries: false
+anthropic_api_key: ""          # or set env var ANTHROPIC_API_KEY
+claude_model: "claude-haiku-4-5-20251001"   # cheapest; good enough for summaries
+
+# --- Reliability score weights (must sum to 1.0) ----------------------------
+# The score (0-100) is a transparent weighted blend. Tune to taste.
+scoring_weights:
+  journal_quality: 0.35    # journal's citation impact (OpenAlex 2yr mean citedness)
+  paper_impact:    0.25    # this paper's citations, normalized by age
+  author_rep:      0.25    # best author's h-index + total citations
+  venue_type:      0.10    # peer-reviewed journal > conference > preprint > unknown
+  verification:    0.05    # did we confidently match a DOI / record?
+
+# Score-to-label cutoffs
+reliability_labels:
+  high: 70
+  medium: 45
+  # anything below "medium" is "Low"; an unmatched record is "Unverified"
+
+# --- Topic routing ----------------------------------------------------------
+# Maps a detected topic to one of YOUR new numbered folders (finalized
+# taxonomy, July 2026). Where a folder has dotted subfolders (1.1/1.2/1.3,
+# 4.1/4.2, 5.1/5.2, 8.1/8.2, 11.1-11.4), the TOP-LEVEL folder goes here —
+# litpipe/naming.py's resolve_subfolder() appends the right subfolder
+# automatically based on scope_level / safety_detail / model_types, which
+# are already computed during classification. No manual subfolder mapping
+# needed here.
+topic_folders:
+  lithium-ion:        "01_LI-ION_CORE"
+  solid-state:         "01_LI-ION_CORE"   # ASSUMPTION: solid-state chemistry is
+                                          # its own primary label in classify.py,
+                                          # not automatically "lithium-ion" — most
+                                          # solid-state work defaults to Li-based
+                                          # unless sodium-ion is explicitly named
+                                          # (which routes to 02 first). Flag any
+                                          # solid-state Na-ion papers that land
+                                          # here by mistake — easy to move with
+                                          # recategorize.py once found.
+  sodium-ion:          "02_NA-ION_CORE"
+  cross-chemistry:     "03_CROSS_CHEMISTRY_COMPARATIVE"
+  hydrogen:            "04_ALTERNATIVE_ENERGY_SYSTEMS"
+  fuel cell:           "04_ALTERNATIVE_ENERGY_SYSTEMS"
+  safety:              "05_SAFETY_ABUSE_TESTING"
+  standard:            "06_STANDARDS_&_REGULATIONS"
+  sensor-instrumentation: "07_TESTING_TECHNIQUES_INSTRUMENTS"
+  modeling:            "08_MODELING_DATA_SCIENCE"
+  validation-both:     "09_VALIDATION_MODELING_&_EXPERIMENT"
+  recycling:           "10_RECYCLING_SECOND_LIFE"
+  book:                "11_BOOKS_&_DOCUMENTS"
+  patent:              "11_BOOKS_&_DOCUMENTS"
+  thesis:              "11_BOOKS_&_DOCUMENTS"
+  technical-report:    "11_BOOKS_&_DOCUMENTS"
+  database:            "12_DATABASES_DATASETS"
+  review:              "13_BROAD_REVIEWS"
+  co-authored:         "15_Co-Authored"   # new folder, added per your decision
+                                          # to keep co-authored papers together
+                                          # (the finalized tree didn't list one)
+# Fallback folder when no topic is confidently detected.
+default_folder: "14_MISC_DOCUMENTS"
+
+# Your own name, in every variant that appears across your publications —
+# used to detect "did I co-author this paper" and route it to the
+# co-authored folder automatically. Matching requires a surname match AND a
+# first-initial match, so it won't false-positive on someone else sharing
+# your surname. Add/remove variants freely.
+my_author_names:
+  - "D Rajagopalan Kannan"
+  - "Dhevathi Rajagoplan Kannan"
+  - "Dhevathi Rajan Rajagopalan Kannan"
+  - "DRR Kannan"
+
+# Tier 4 files (no real prose content, not a reading resource — e.g. raw
+# instrument-export slide decks like SEM/EDS captions) all go into ONE
+# dedicated folder, not routed by chemistry. Given a new number since 14 is
+# now taken by Misc Documents in the new taxonomy.
+tier4_folder: "16_LOCAL_MISC_UNVERIFIED"
+
+# --- Routing priority -------------------------------------------------------
+# A paper is often cross-cutting. It lands in ONE folder, chosen by walking
+# this list top-to-bottom and taking the first topic the paper has. The
+# matrix tags still capture EVERY facet, so it stays findable no matter
+# where it's filed.
+#
+# Document-TYPE categories (patent/thesis/technical-report/standard/book/
+# review/database) outrank SUBJECT-MATTER categories, same principle as
+# before: a thesis about lithium-ion safety is still filed as a thesis, not
+# under safety or chemistry — you'd look for it as "that PhD thesis", not
+# "that safety paper". Cross-chemistry, validation-both, and safety are new
+# subject-matter categories from the finalized taxonomy; they outrank plain
+# chemistry the same way recycling/hydrogen/modeling already did, since a
+# paper that's substantively about safety testing (regardless of chemistry)
+# belongs in 05, and a paper that validates a model against experiment
+# belongs in 09 — not buried under 01/02 by chemistry alone.
+routing_priority:
+  - co-authored
+  - patent
+  - thesis
+  - technical-report
+  - standard
+  - book
+  - review
+  - database
+  - cross-chemistry
+  - validation-both
+  - safety
+  - recycling
+  - hydrogen
+  - fuel cell
+  - modeling
+  - sensor-instrumentation
+  - sodium-ion
+  - lithium-ion
+
+# --- Filename template ------------------------------------------------------
+# Available fields: {year} {author} {title} {topic} {journal} {doi_tail}
+# {author} uses the SENIOR/most-reputable author (best h-index / citations),
+# NOT necessarily the first author — a first author is often a student, and
+# you want the name you'd actually recognize the paper by. Illegal filesystem
+# characters are stripped automatically.
+filename_template: "{year}_{title}_{author}_{journal}"
+title_word_limit: 10        # keep filenames from getting absurdly long
+
+# --- The "new papers" agent -------------------------------------------------
+agent:
+  # Topics/keywords to hunt for. One search per line.
+  queries:
+    - "sodium-ion battery cathode"
+    - "lithium-ion battery thermal runaway"
+    - "solid-state electrolyte battery"
+    - "battery digital twin state of health"
+  # Only surface papers newer than this many days on each run.
+  lookback_days: 30
+  # Minimum reliability score for a new find to be added to the matrix.
+  min_score: 40
+  results_per_query: 25
+
+# --- Fuzzy-match domain gate ------------------------------------------------
+# When a paper can't be resolved by DOI, the pipeline falls back to searching
+# OpenAlex/Crossref/Semantic Scholar by TITLE. That fuzzy search can return a
+# confidently-wrong record whose title happens to share a few GENERIC words
+# with ours (e.g. our "Structural and Compositional Analysis of NMC" matching
+# a dermatology paper "...analysis of the keratinocyte microbiome" — shared
+# words are all method words; the real subjects never overlap).
+#
+# The guard: a fuzzy title match is only trusted when the words our title and
+# the candidate SHARE include at least one genuine domain term below — a
+# battery / electrochemistry / energy-storage / materials / modeling word, not
+# a generic "analysis/study/effect" word. This library is ~100% energy-storage
+# research, so a real match always shares several of these; a coincidental
+# cross-field match shares none. You almost never need this list to be
+# exhaustive (a true match shares many domain words, we require only one) —
+# just add any recurring field term you see wrongly rejected.
+#
+# These EXTEND the built-in defaults in enrich.py; you don't need to re-list
+# the basics. Multi-word phrases are compared word-by-word, so add single
+# words. Health/emissions "bridge" words are handled separately (a battery-
+# fire-toxicity paper still matches because it shares a battery anchor too;
+# a pure-toxicology wrong hit, sharing only bridge words, is rejected).
+matching:
+  # extra domain terms (>=4 chars) beyond the built-in vocabulary
+  domain_terms:
+    - electrolyte
+    - overpotential
+    - passivation
+    - delithiation
+    - lithiation
+    - tortuosity
+    - percolation
+    - calendering
+    - formation
+    - wettability
+    - crossover
+    - stateofcharge
+    - stateofhealth
+  # short domain acronyms (checked WITHOUT the >=4-char length rule, since a
+  # terse filename's only subject token is often just an acronym like "NMC")
+  domain_acronyms:
+    - nmc
+    - nca
+    - lfp
+    - lco
+    - lto
+    - sei
+    - cei
+    - soc
+    - soh
+    - eis
+    - ecm
+    - dfn
+    - p2d
+    - bms
+    - bess
+    - ess
+    - assb
+  # health/emissions bridge words: allowed to appear, but never the sole
+  # reason a match is trusted (a real battery-fire paper also shares a
+  # battery anchor). Extend if you see a legitimate safety-adjacent term.
+  bridge_terms:
+    - toxic
+    - emission
+    - emissions
+    - smoke
+    - respiratory
+    - inhalation
+    - exposure
+  # how many significant words the two titles must share at minimum
+  min_shared_words_low: 2
+  min_shared_words_high: 3
