@@ -280,6 +280,7 @@
         <option value="rel">Sort: reliability</option>
         <option value="cites">Sort: citations</option>
         <option value="year">Sort: year (newest)</option>
+        <option value="added">Sort: date added (newest)</option>
         <option value="title">Sort: title A–Z</option>
       </select>
       <div class="count" id="count"></div>
@@ -503,6 +504,7 @@ function sortRows(rows){
     if(by==="rel"){ const d=(RELORDER[b.reliability_label]||0)-(RELORDER[a.reliability_label]||0); return d||num(b.reliability)-num(a.reliability);}
     if(by==="cites") return num(b.citations)-num(a.citations);
     if(by==="year")  return num(b.year)-num(a.year);
+    if(by==="added") return String(b.date_added||"").localeCompare(String(a.date_added||""));
     if(by==="title") return String(a.title).localeCompare(String(b.title));
     return 0;
   });
@@ -601,7 +603,10 @@ function openDrawer(i){
     <div class="grid2" style="margin-bottom:20px">
       ${stat("Reliability", (p.reliability||"—")+(p.reliability_label?" · "+p.reliability_label:""))}
       ${stat("Citations", p.citations||"—")}
+      ${stat("Published year", p.year||"—")}
+      ${stat("Date added", p.date_added||"—")}
       ${stat("Journal / venue", p.journal_venue||"—")}
+      ${stat("Publisher", p.publisher||"—")}
       ${stat("Lead author", p.lead_author||"—")}
     </div>
 
