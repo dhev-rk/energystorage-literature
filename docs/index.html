@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<!-- BUILD MARKER: nested-anchor-fix-2026-08-10-2320 — if you View Source on
+     the live site and don't see this exact string, you are being served a
+     cached/old copy, not this file. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Curated battery safety & energy storage literature. Browse by category, click through to the source.">
+<title>Battery & Energy Storage Literature</title>
+<style>
+  :root{
+    --bg:#ffffff; --panel:#f6f7f9; --panel-2:#eceef1; --line:#dde1e6;
+    --ink:#1a1f26; --ink-dim:#5b6570; --ink-faint:#8a94a0;
+    --accent:#0f8f8a; --accent-ink:#ffffff;
+    --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --r:6px;
+  }
+  .chem-lithium-ion{--c:#4c8bf5} .chem-sodium-ion{--c:#f5a04c} .chem-lithium-metal{--c:#8b7cf5}
+  .chem-solid-state{--c:#4cc4c0} .chem-lithium-sulfur{--c:#c99f00} .chem-lead-acid{--c:#9aa7b4}
+  .chem-flow{--c:#4cd6b0} .chem-potassium-ion{--c:#c0507e} .chem-other{--c:#68737f}
+
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  .hamburger{display:none;background:none;border:1px solid var(--line);border-radius:var(--r);
+    padding:8px 11px;cursor:pointer;color:var(--ink);font-size:16px;align-items:center;flex:none}
+  .hamburger:hover{border-color:var(--ink-faint)}
+  .sidebar-close{display:none}
+
+  .sidebar{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px 40px;
+    position:sticky;top:0;align-self:start;max-height:100vh;overflow-y:auto}
+
+  /* Mobile drawer overrides — MUST come after the base .hamburger/.sidebar/
+     .sidebar-close rules above (equal specificity, so source order decides
+     the winner inside the matching viewport; placing this block earlier
+     silently loses the cascade to those base rules, which is exactly what
+     was neutralizing this on phones). */
+  @media (max-width:820px){
+    .app{grid-template-columns:1fr}
+    .hamburger{display:inline-flex}
+    .sidebar{
+      position:fixed;top:0;left:0;bottom:0;width:280px;max-width:85vw;z-index:20;
+      transform:translateX(-100%);transition:transform .22s ease;
+      box-shadow:2px 0 20px rgba(0,0,0,.2);
+    }
+    .sidebar.open{transform:translateX(0)}
+    .sidebar-close{display:block;position:absolute;top:10px;right:10px;background:none;
+      border:none;color:var(--ink-faint);font-size:20px;cursor:pointer;padding:4px;z-index:1}
+    .sidebar-scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:19;display:none}
+    .sidebar-scrim.open{display:block}
+  }
+
+  .brand h1{font-size:16px;font-weight:650;margin:2px 2px 2px}
+  .brand p{margin:0 2px 16px;color:var(--ink-faint);font-size:12px;line-height:1.5}
+  .stamp{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin:0 2px 18px}
+  .facet{margin-bottom:20px}
+  .facet h3{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--ink-faint);margin:0 0 8px 2px;display:flex;justify-content:space-between}
+  .facet h3 button{font:inherit;background:none;border:none;color:var(--accent);cursor:pointer;
+    text-transform:none;letter-spacing:0;padding:0;font-size:10.5px;visibility:hidden}
+  .facet.has-active h3 button{visibility:visible}
+  .opt{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--r);cursor:pointer;color:var(--ink-dim)}
+  .opt:hover{background:var(--panel-2);color:var(--ink)}
+  .opt.on{background:var(--panel-2);color:var(--ink)}
+  .opt .dot{width:8px;height:8px;border-radius:2px;background:var(--c,var(--ink-faint));flex:none}
+  .opt .lab{flex:1;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .opt .ct{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+
+  .main{overflow-y:auto}
+  .stickyhead{position:sticky;top:0;z-index:5}
+  .topbar{background:rgba(255,255,255,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);padding:14px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .search{position:relative;flex:1;min-width:200px;max-width:480px}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+    fill:none;stroke:var(--ink-faint)}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+    padding:9px 12px 9px 34px;font:inherit;color:var(--ink)}
+  .count{font-family:var(--mono);font-size:12px;color:var(--ink-faint);white-space:nowrap}
+  .list{padding:16px 22px 60px;display:flex;flex-direction:column;gap:10px}
+  .card{display:flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+    background:var(--panel);text-decoration:none;color:inherit}
+  .card:hover{border-color:var(--c,var(--ink-faint));text-decoration:none}
+  .card .spine{width:4px;background:var(--c,var(--ink-faint));flex:none}
+  .card .body{padding:14px 16px;flex:1;min-width:0}
+  .card .t{font-size:14.5px;font-weight:600;margin:0 0 6px;color:var(--ink);line-height:1.4}
+  .card .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-dim);margin-bottom:6px}
+  .card .chem{color:var(--c);font-weight:600}
+  .card .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .card .tag{font-family:var(--mono);font-size:10.5px;background:var(--panel-2);color:var(--ink-dim);
+    padding:2px 7px;border-radius:4px}
+  .card .go{margin-top:8px;color:var(--ink-faint);font-family:var(--mono);font-size:11.5px;
+    display:flex;align-items:center;gap:10px;white-space:nowrap}
+  .card .go .s2link{color:var(--accent);font-size:10.5px;text-decoration:none;cursor:pointer}
+  .card .go .s2link:hover{text-decoration:underline}
+  .empty{padding:80px 22px;text-align:center;color:var(--ink-faint)}
+  .empty .big{font-size:16px;color:var(--ink-dim)}
+  .loading{padding:80px;text-align:center;color:var(--ink-faint);font-family:var(--mono)}
+
+  /* ---- compare (public: title/authors/chemistry/abstract + DOI only —
+     no methodology, no local file, no notes bridge; those stay in lab.html) ---- */
+  .card{position:relative}
+  .card.selected{outline:2px solid var(--accent);outline-offset:-2px}
+  .cmp-wrap{flex:none;display:flex;align-items:center;padding:0 4px 0 14px}
+  .cmp-wrap input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+  .cmpbar{
+    position:sticky;top:0;z-index:5;background:var(--accent);color:var(--accent-ink);
+    padding:10px 22px;display:none;align-items:center;gap:12px;flex-wrap:wrap;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+  }
+  .cmpbar.show{display:flex}
+  .cmpbar .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.04em;opacity:.85}
+  .cmpbar .cmpchips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+  .cmpbar .cmpchip{font-size:12px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+    border-radius:var(--r);padding:4px 8px;display:inline-flex;align-items:center;gap:6px;max-width:220px;color:inherit}
+  .cmpbar .cmpchip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cmpbar .cmpchip .x{cursor:pointer;color:inherit;font-weight:700;opacity:.8}
+  .cmpbar .cmpchip .x:hover{opacity:1}
+  .btn{font-family:var(--mono);font-size:12px;padding:8px 14px;border-radius:var(--r);
+    border:1px solid var(--line);background:var(--panel-2);color:var(--ink);cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;text-decoration:none}
+  .btn:hover{border-color:var(--ink-faint);text-decoration:none}
+  .btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+  .btn.ghost{color:var(--ink-dim)}
+  .compare-overlay{position:fixed;inset:0;z-index:25;background:var(--bg);display:none;flex-direction:column}
+  .compare-overlay.open{display:flex}
+  .compare-head{padding:16px 22px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;flex:none}
+  .compare-head h2{font-size:16px;margin:0;font-weight:650}
+  .compare-head .close{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:22px;padding:4px}
+  .compare-body{flex:1;overflow:auto;padding:20px 22px 40px}
+  .compare-grid{display:grid;gap:18px;align-items:start;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .compare-col{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+  .compare-col .spine-top{height:4px;background:var(--c,var(--ink-faint))}
+  .compare-col .chead{padding:14px 16px 12px;border-bottom:1px solid var(--line);position:relative}
+  .compare-col .chead .rm{position:absolute;top:10px;right:10px;background:none;border:none;
+    color:var(--ink-faint);cursor:pointer;font-size:16px;padding:2px}
+  .compare-col .chead h3{font-size:14px;margin:0 22px 6px 0;line-height:1.35}
+  .compare-col .chead .meta2{font-size:11.5px;color:var(--ink-dim)}
+  .compare-col .cbody{padding:12px 16px 16px}
+  .field{margin-bottom:16px}
+  .field .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:5px}
+  .field .v{color:var(--ink);font-size:13.5px}
+  .field .v.abs{color:var(--ink-dim);line-height:1.65}
+  .note{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div class="sidebar-scrim" id="sidebarScrim"></div>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <button class="sidebar-close" id="sidebarClose" aria-label="Close filters">×</button>
+    <div class="brand">
+      <h1>Battery &amp; Energy Storage Literature</h1>
+      <p>A curated reading list for battery safety &amp; energy storage research. Select papers to compare abstracts, or click through to the source.</p>
+    </div>
+    <div class="stamp" id="stamp">loading…</div>
+    <div id="facets"></div>
+  </aside>
+  <main class="main">
+    <div class="stickyhead">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Open filters">☰</button>
+      <div class="search">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Search title, author, journal, tag…" autocomplete="off">
+      </div>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="cmpbar" id="cmpbar">
+      <span class="lbl">COMPARE (<span id="cmpcount">0</span>/4)</span>
+      <div class="cmpchips" id="cmpchips"></div>
+      <button class="btn ghost" id="cmpclear">Clear</button>
+      <button class="btn primary" id="cmpopen">Compare abstracts ↗</button>
+    </div>
+    </div>
+    <div class="list" id="list"><div class="loading">Loading library…</div></div>
+  </main>
+</div>
+
+<div class="compare-overlay" id="compareOverlay" aria-hidden="true">
+  <div class="compare-head">
+    <h2 id="compareTitle">Comparing papers</h2>
+    <button class="close" id="compareClose" aria-label="Close">×</button>
+  </div>
+  <div class="compare-body" id="compareBody"></div>
+</div>
+
+<script>
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const CHEM_CLASS = c => "chem-" + String(c||"other").toLowerCase().replace(/[^a-z0-9]+/g,"-");
+// web_link is sometimes a stale non-URL sentinel from an upstream Excel
+// hyperlink-display-text bug — only trust it if it's actually a URL,
+// otherwise always fall back to a real doi.org link.
+function readLink(p){
+  const wl = (p.web_link||"").trim();
+  if(/^https?:\/\//i.test(wl)) return wl;
+  return p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "";
+}
+// api.semanticscholar.org/{doi} is Semantic Scholar's documented DOI
+// resolver — it 302-redirects straight to the paper's real S2 page.
+function s2Link(p){
+  return p.doi ? "https://api.semanticscholar.org/"+encodeURIComponent(String(p.doi).trim()) : "";
+}
+// Connected Papers is built on the Semantic Scholar corpus and accepts a
+// DOI typed into its own search box — this mirrors that as a query param.
+// Worth a manual spot-check; unlike the S2 resolver above this isn't a
+// documented API contract, just the same input their search UI takes.
+function connectedPapersLink(p){
+  return p.doi ? "https://www.connectedpapers.com/search?q="+encodeURIComponent(String(p.doi).trim()) : "";
+}
+let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set(), journal_venue:new Set()}, compare:new Set()};
+const CMP_MAX = 4;
+
+const FACET_DEFS = [
+  {key:"chemistry", label:"Chemistry", chem:true},
+  {key:"journal_venue", label:"Journal", limit:20},
+  {key:"tags", label:"Tags", limit:24},
+];
+
+async function boot(){
+  try{
+    const r = await fetch("papers.json");
+    if(!r.ok) throw new Error(r.status);
+    DATA = await r.json();
+  }catch(e){
+    document.getElementById("list").innerHTML =
+      '<div class="empty"><p class="big">Couldn\'t load the library</p><p>papers.json must sit next to index.html.</p></div>';
+    return;
+  }
+  // Public list only includes papers with a real place to send someone —
+  // a title with nowhere to click isn't useful here.
+  PAPERS = DATA.papers.filter(p => readLink(p));
+  const d = new Date(DATA.generated_at);
+  document.getElementById("stamp").textContent =
+    PAPERS.length + " papers · updated " + (isNaN(d)? "—" : d.toISOString().slice(0,10));
+  buildFacets();
+  bind();
+  render();
+}
+
+function buildFacets(){
+  const counts = {chemistry:{}, tags:{}, journal_venue:{}};
+  for(const p of PAPERS){
+    const c = String(p.chemistry||"").trim(); if(c) counts.chemistry[c]=(counts.chemistry[c]||0)+1;
+    for(const t of (p.tags_list||[])) if(!t.startsWith("chem:")) counts.tags[t]=(counts.tags[t]||0)+1;
+    const j = String(p.journal_venue||"").trim(); if(j) counts.journal_venue[j]=(counts.journal_venue[j]||0)+1;
+  }
+  const host = document.getElementById("facets");
+  host.innerHTML = "";
+  for(const def of FACET_DEFS){
+    let opts = Object.entries(counts[def.key]).sort((a,b)=>b[1]-a[1]);
+    if(def.limit) opts = opts.slice(0, def.limit);
+    if(!opts.length) continue;
+    const wrap = document.createElement("div");
+    wrap.className = "facet"; wrap.dataset.key = def.key;
+    wrap.innerHTML = `<h3>${def.label}<button data-clear="${def.key}">clear</button></h3>`;
+    for(const [val,ct] of opts){
+      const el = document.createElement("div");
+      el.className = "opt " + (def.chem?CHEM_CLASS(val):"");
+      el.dataset.key = def.key; el.dataset.val = val;
+      el.innerHTML = `<span class="dot"></span><span class="lab">${esc(val)}</span><span class="ct">${ct}</span>`;
+      wrap.appendChild(el);
+    }
+    host.appendChild(wrap);
+  }
+}
+
+function openSidebar(){
+  document.getElementById("sidebar").classList.add("open");
+  document.getElementById("sidebarScrim").classList.add("open");
+}
+function closeSidebar(){
+  document.getElementById("sidebar").classList.remove("open");
+  document.getElementById("sidebarScrim").classList.remove("open");
+}
+
+function bind(){
+  document.getElementById("hamburger").addEventListener("click", openSidebar);
+  document.getElementById("sidebarClose").addEventListener("click", closeSidebar);
+  document.getElementById("sidebarScrim").addEventListener("click", closeSidebar);
+  document.getElementById("facets").addEventListener("click",e=>{
+    const opt = e.target.closest(".opt");
+    const clr = e.target.closest("[data-clear]");
+    if(clr){ STATE.filters[clr.dataset.clear].clear(); render(); return; }
+    if(opt){
+      const s = STATE.filters[opt.dataset.key];
+      s.has(opt.dataset.val) ? s.delete(opt.dataset.val) : s.add(opt.dataset.val);
+      render();
+      if(window.innerWidth <= 820) closeSidebar();
+    }
+  });
+  const q = document.getElementById("q");
+  q.addEventListener("input",()=>{STATE.q=q.value.trim().toLowerCase();render();});
+  document.getElementById("list").addEventListener("change",e=>{
+    const cb=e.target.closest(".cmp-check"); if(!cb) return;
+    const i=+cb.dataset.i;
+    if(cb.checked){
+      if(STATE.compare.size>=CMP_MAX){ cb.checked=false; return; }
+      STATE.compare.add(i);
+    } else STATE.compare.delete(i);
+    updateCompareUI();
+  });
+  document.getElementById("list").addEventListener("click",e=>{
+    const s2=e.target.closest(".s2link"); if(!s2) return;
+    e.preventDefault(); e.stopPropagation();
+    window.open(s2.dataset.s2, "_blank", "noopener");
+  });
+  document.getElementById("list").addEventListener("keydown",e=>{
+    if(e.key!=="Enter" && e.key!==" ") return;
+    const s2=e.target.closest(".s2link"); if(!s2) return;
+    e.preventDefault(); e.stopPropagation();
+    window.open(s2.dataset.s2, "_blank", "noopener");
+  });
+  document.getElementById("cmpclear").addEventListener("click",()=>{
+    STATE.compare.clear(); updateCompareUI();
+    document.querySelectorAll(".cmp-check").forEach(cb=>cb.checked=false);
+  });
+  document.getElementById("cmpchips").addEventListener("click",e=>{
+    const x=e.target.closest("[data-rm]"); if(!x) return;
+    const i=+x.dataset.rm; STATE.compare.delete(i); updateCompareUI();
+    const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+  });
+  document.getElementById("cmpopen").addEventListener("click", openCompare);
+  document.getElementById("compareClose").addEventListener("click", closeCompare);
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeCompare(); closeSidebar(); } });
+}
+
+function updateCompareUI(){
+  const n = STATE.compare.size;
+  document.getElementById("cmpcount").textContent = n;
+  document.getElementById("cmpbar").classList.toggle("show", n>0);
+  document.querySelectorAll(".card").forEach(c=>{
+    c.classList.toggle("selected", STATE.compare.has(+c.dataset.i));
+  });
+  const chips = [...STATE.compare].map(i=>{
+    const p = PAPERS[i];
+    return `<span class="cmpchip"><span class="t">${esc(p.title)}</span><span class="x" data-rm="${i}">×</span></span>`;
+  });
+  document.getElementById("cmpchips").innerHTML = chips.join("");
+}
+
+function openCompare(){
+  if(!STATE.compare.size) return;
+  const idxs = [...STATE.compare];
+  document.getElementById("compareTitle").textContent = `Comparing ${idxs.length} paper${idxs.length>1?"s":""}`;
+  document.getElementById("compareBody").innerHTML =
+    `<div class="compare-grid">${idxs.map(compareColHTML).join("")}</div>`;
+  document.getElementById("compareBody").querySelectorAll("[data-rm-col]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const i=+btn.dataset.rmCol;
+      STATE.compare.delete(i); updateCompareUI();
+      const cb=document.querySelector(`.cmp-check[data-i="${i}"]`); if(cb) cb.checked=false;
+      if(STATE.compare.size) openCompare(); else closeCompare();
+    });
+  });
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.add("open"); ov.setAttribute("aria-hidden","false");
+}
+
+function compareColHTML(i){
+  const p = PAPERS[i]; if(!p) return "";
+  const chemCls = CHEM_CLASS(p.chemistry);
+  const href = readLink(p);
+  const s2 = s2Link(p);
+  const cp = connectedPapersLink(p);
+  const abs = (p.abstract||"").trim();
+  return `<div class="compare-col ${chemCls}">
+    <div class="spine-top"></div>
+    <div class="chead">
+      <button class="rm" data-rm-col="${i}" aria-label="Remove from comparison">×</button>
+      <h3>${esc(p.title)}</h3>
+      <div class="meta2">${p.all_authors?esc(p.all_authors)+" · ":""}${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}</div>
+    </div>    <div class="cbody">
+      <div style="margin:0 0 14px;display:flex;gap:8px;flex-wrap:wrap">
+        ${href?`<a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
+        ${s2?`<a class="btn ghost" href="${esc(s2)}" target="_blank" rel="noopener">Semantic Scholar ↗</a>`:""}
+        ${cp?`<a class="btn ghost" href="${esc(cp)}" target="_blank" rel="noopener">Connected Papers ↗</a>`:""}
+      </div>
+      ${abs?`<div class="field"><div class="k">Abstract</div><div class="v abs">${esc(abs)}</div></div>`
+           :`<div class="note">No abstract on record.</div>`}
+    </div>
+  </div>`;
+}
+
+function closeCompare(){
+  const ov=document.getElementById("compareOverlay");
+  ov.classList.remove("open"); ov.setAttribute("aria-hidden","true");
+}
+
+function matches(p){
+  if(STATE.q){
+    const blob = [(p.title||""),(p.all_authors||""),(p.tags||""),(p.journal_venue||""),(p.publisher||"")].join(" ").toLowerCase();
+    for(const t of STATE.q.split(/\s+/).filter(Boolean)) if(!blob.includes(t)) return false;
+  }
+  if(STATE.filters.chemistry.size && !STATE.filters.chemistry.has(String(p.chemistry||""))) return false;
+  if(STATE.filters.journal_venue.size && !STATE.filters.journal_venue.has(String(p.journal_venue||""))) return false;
+  if(STATE.filters.tags.size){
+    const tl=new Set(p.tags_list||[]);
+    for(const t of STATE.filters.tags) if(!tl.has(t)) return false;
+  }
+  return true;
+}
+
+function render(){
+  const rows = PAPERS.filter(matches);
+  document.querySelectorAll(".facet").forEach(f=>{
+    const key=f.dataset.key, s=STATE.filters[key];
+    f.classList.toggle("has-active", s.size>0);
+    f.querySelectorAll(".opt").forEach(o=>o.classList.toggle("on", s.has(o.dataset.val)));
+  });
+  document.getElementById("count").innerHTML = `<b>${rows.length}</b> of ${PAPERS.length}`;
+  const host = document.getElementById("list");
+  if(!rows.length){
+    host.innerHTML = '<div class="empty"><p class="big">No papers match</p><p>Try removing a filter or broadening your search.</p></div>';
+    return;
+  }
+  host.innerHTML = rows.map(cardHTML).join("");
+}
+
+function cardHTML(p){
+  const i = PAPERS.indexOf(p);
+  const href = readLink(p);
+  const tags = (p.tags_list||[]).filter(t=>!t.startsWith("chem:")).slice(0,5)
+    .map(t=>`<span class="tag">${esc(t)}</span>`).join("");
+  const yr = p.year?esc(p.year):"—";
+  const venue = p.journal_venue?esc(p.journal_venue):"";
+  const checked = STATE.compare.has(i) ? "checked" : "";
+  const s2 = s2Link(p);
+  // NOTE: s2link is a <span> with a click handler, NOT a nested <a> — the
+  // whole card is already an <a href> (so the browser's native
+  // middle-click/ctrl-click/hover-URL behavior works for the main "Read"
+  // action), and an <a> inside an <a> is invalid HTML. Browsers recover
+  // from that by silently closing the OUTER anchor as soon as they hit the
+  // inner one, which breaks the card's flex layout and was the real cause
+  // of "Read / Semantic Scholar" rendering as separate full-width rows
+  // outside the card border — not a flex-direction/CSS issue at all.
+  return `<a class="card ${CHEM_CLASS(p.chemistry)} ${checked?'selected':''}" data-i="${i}" href="${esc(href)}" target="_blank" rel="noopener">
+    <div class="spine"></div>
+    <div class="cmp-wrap"><input type="checkbox" class="cmp-check" data-i="${i}" ${checked}
+      title="Add to comparison" aria-label="Add to comparison"
+      onclick="event.stopPropagation()"></div>
+    <div class="body">
+      <p class="t">${esc(p.title)}</p>
+      <div class="meta">
+        <span class="chem">${esc(p.chemistry)}</span>
+        <span>${yr}</span>
+        ${venue?`<span>${venue}</span>`:""}
+      </div>
+      ${tags?`<div class="tags">${tags}</div>`:""}
+      <div class="go">
+        <span>Read ↗</span>
+        ${s2?`<span class="s2link" role="link" tabindex="0" data-s2="${esc(s2)}">Semantic Scholar</span>`:""}
+      </div>
+    </div>
+  </a>`;
+}
+
+boot();
+</script>
+</body>
+</html>
