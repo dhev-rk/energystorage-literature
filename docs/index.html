@@ -91,7 +91,10 @@
   .card .tags{display:flex;flex-wrap:wrap;gap:5px}
   .card .tag{font-family:var(--mono);font-size:10.5px;background:var(--panel-2);color:var(--ink-dim);
     padding:2px 7px;border-radius:4px}
-  .card .go{align-self:center;padding:0 16px;color:var(--ink-faint);font-family:var(--mono);font-size:12px;flex:none}
+  .card .go{align-self:center;padding:0 16px;color:var(--ink-faint);font-family:var(--mono);font-size:11.5px;flex:none;
+    text-align:right;display:flex;flex-direction:column;gap:5px}
+  .card .go .s2link{color:var(--accent);font-size:10.5px;text-decoration:none}
+  .card .go .s2link:hover{text-decoration:underline}
   .empty{padding:80px 22px;text-align:center;color:var(--ink-faint)}
   .empty .big{font-size:16px;color:var(--ink-dim)}
   .loading{padding:80px;text-align:center;color:var(--ink-faint);font-family:var(--mono)}
@@ -196,6 +199,18 @@ function readLink(p){
   const wl = (p.web_link||"").trim();
   if(/^https?:\/\//i.test(wl)) return wl;
   return p.doi ? "https://doi.org/"+encodeURI(String(p.doi).trim()) : "";
+}
+// api.semanticscholar.org/{doi} is Semantic Scholar's documented DOI
+// resolver — it 302-redirects straight to the paper's real S2 page.
+function s2Link(p){
+  return p.doi ? "https://api.semanticscholar.org/"+encodeURIComponent(String(p.doi).trim()) : "";
+}
+// Connected Papers is built on the Semantic Scholar corpus and accepts a
+// DOI typed into its own search box — this mirrors that as a query param.
+// Worth a manual spot-check; unlike the S2 resolver above this isn't a
+// documented API contract, just the same input their search UI takes.
+function connectedPapersLink(p){
+  return p.doi ? "https://www.connectedpapers.com/search?q="+encodeURIComponent(String(p.doi).trim()) : "";
 }
 let DATA=null, PAPERS=[], STATE={q:"", filters:{chemistry:new Set(), tags:new Set(), journal_venue:new Set()}, compare:new Set()};
 const CMP_MAX = 4;
@@ -339,6 +354,8 @@ function compareColHTML(i){
   const p = PAPERS[i]; if(!p) return "";
   const chemCls = CHEM_CLASS(p.chemistry);
   const href = readLink(p);
+  const s2 = s2Link(p);
+  const cp = connectedPapersLink(p);
   const abs = (p.abstract||"").trim();
   return `<div class="compare-col ${chemCls}">
     <div class="spine-top"></div>
@@ -347,8 +364,10 @@ function compareColHTML(i){
       <h3>${esc(p.title)}</h3>
       <div class="meta2">${p.all_authors?esc(p.all_authors)+" · ":""}${esc(p.chemistry)} · ${p.year?esc(p.year):"—"}</div>
     </div>    <div class="cbody">
-      <div style="margin:0 0 14px">
+      <div style="margin:0 0 14px;display:flex;gap:8px;flex-wrap:wrap">
         ${href?`<a class="btn primary" href="${esc(href)}" target="_blank" rel="noopener">Read paper ↗</a>`:`<div class="note">No DOI/web link on record.</div>`}
+        ${s2?`<a class="btn ghost" href="${esc(s2)}" target="_blank" rel="noopener">Semantic Scholar ↗</a>`:""}
+        ${cp?`<a class="btn ghost" href="${esc(cp)}" target="_blank" rel="noopener">Connected Papers ↗</a>`:""}
       </div>
       ${abs?`<div class="field"><div class="k">Abstract</div><div class="v abs">${esc(abs)}</div></div>`
            :`<div class="note">No abstract on record.</div>`}
@@ -413,7 +432,10 @@ function cardHTML(p){
       </div>
       ${tags?`<div class="tags">${tags}</div>`:""}
     </div>
-    <div class="go">Read ↗</div>
+    <div class="go">
+      <div>Read ↗</div>
+      ${s2Link(p)?`<a href="${esc(s2Link(p))}" target="_blank" rel="noopener" class="s2link" onclick="event.stopPropagation()">Semantic Scholar</a>`:""}
+    </div>
   </a>`;
 }
 
