@@ -29,7 +29,7 @@ dry_run: true
 # When you turn dry_run off, choose how files are placed:
 #   "copy" = originals stay put, a renamed copy goes to the topic folder (safest)
 #   "move" = the original is renamed and moved (tidier, irreversible without backup)
-file_action: "copy"
+file_action: "move"
 
 # Only process this many files (useful for a first test). 0 = no limit.
 limit: 0
